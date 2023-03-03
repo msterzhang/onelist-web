@@ -91,7 +91,7 @@
                     <div class="episode-card-list">
                         <div class="episode-card-item" v-for="(item, index) in season.episodes" :key="index">
                             <div @click="ItemPlayer(item, index)" class="episode-img">
-                                <img loading="lazy" :src='COMMON.imgUrl + "/t/p/w1920_and_h1080_bestv2" + item.still_path'
+                                <img loading="lazy" :src='COMMON.imgUrl + "/t/p/w710_and_h400_multi_faces" + item.still_path'
                                     alt="">
                             </div>
                             <div class="episode-content">
