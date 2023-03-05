@@ -185,7 +185,7 @@ export default {
             "is_tv": true,
             "gallery_uid": "",
             "image": "",
-            "is_alist": true,
+            "is_alist": false,
             "alist_host": "",
             "alist_user": "",
             "alist_pwd": "",

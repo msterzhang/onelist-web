@@ -65,16 +65,6 @@
                                         <i class='bx bxs-star'></i>
                                     </span>
                                 </button>
-                                <button class="detailButton circleButton">
-                                    <span class="button-icon">
-                                        <i class='bx bxs-trash-alt'></i>
-                                    </span>
-                                </button>
-                                <button class="detailButton circleButton">
-                                    <span class="button-icon">
-                                        <i class='bx bx-dots-vertical-rounded'></i>
-                                    </span>
-                                </button>
                             </n-space>
                             <div class="overview-text">
                                 {{ data.overview }}
@@ -128,7 +118,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 </template>
 <script>

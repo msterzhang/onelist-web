@@ -28,7 +28,7 @@
                 <n-form-item label="TheMovieDb api密匙" path="inputValue">
                     <n-input v-model:value="config.key_db" size="large" placeholder="" clearable />
                 </n-form-item>
-                <n-button class="btn-save" @click="Save()" type="info">
+                <n-button size="large" class="btn-save" @click="Save()" type="info">
                     保存
                 </n-button>
             </n-form>

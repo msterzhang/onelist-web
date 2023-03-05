@@ -33,7 +33,6 @@
                                     </div>
                                 </div>
                             </div>
-
                             <n-space size="large" class="detailButtons">
                                 <button @click="Play()" class="detailButton outlineButton">
                                     <span class="button-icon">
@@ -64,7 +63,8 @@
                                         <i class='bx bxs-star'></i>
                                     </span>
                                 </button>
-                                <button class="detailButton circleButton">
+                                <button v-show="is_admin" @click="deleteModal = !deleteModal"
+                                    class="detailButton circleButton">
                                     <span class="button-icon">
                                         <i class='bx bxs-trash-alt'></i>
                                     </span>
@@ -233,9 +233,77 @@
                     </n-scrollbar>
                 </div>
             </div>
-
         </div>
-
+        <n-modal transform-origin="center" v-model:show="deleteModal">
+            <n-card style="width: 600px" title="确认" :bordered="false" size="huge" role="dialog" aria-modal="true">
+                <template #header-extra>
+                    <n-button @click="deleteModal = !deleteModal" strong secondary circle>
+                        <i class='bx bx-x'></i>
+                    </n-button>
+                </template>
+                <h3>确定要删除此资源吗？</h3>
+                <template #footer>
+                    <n-space justify="end" size="medium">
+                        <n-button @click="deleteModal = !deleteModal" type="info">
+                            取消
+                        </n-button>
+                        <n-button @click="DeleteVideo()" type="warning">
+                            确定
+                        </n-button>
+                    </n-space>
+                </template>
+            </n-card>
+        </n-modal>
+        <n-modal transform-origin="center" v-model:show="scrapeModal">
+            <n-card style="width: 600px" title="重新刮削" :bordered="false" size="huge" role="dialog" aria-modal="true">
+                <template #header-extra>
+                    <n-button @click="scrapeModal = !scrapeModal" strong secondary circle>
+                        <i class='bx bx-x'></i>
+                    </n-button>
+                </template>
+                <n-spin :show="show">
+                    <n-input @keyup.enter="SearchVideo()" v-model:value="q" type="text" size="large" placeholder="">
+                        <template #prefix>
+                            <i class='bx bx-search'></i>
+                        </template>
+                    </n-input>
+                    <div class="seart-list">
+                        <div class="search-itme" v-for="(item, index) in searchData" :key="index">
+                            <div class="search-img">
+                                <img loading="lazy"
+                                    :src='"https://image.tmdb.org/t/p/w220_and_h330_face/" + item.poster_path'>
+                            </div>
+                            <div class="search-content">
+                                <div class="search-title">
+                                    {{ gallery_type == "tv" ? item.name : item.title }}
+                                </div>
+                                <div class="search-id">
+                                    ID:{{ item.id }}
+                                </div>
+                                <div class="search-overview">
+                                    简介:{{ item.overview }}
+                                </div>
+                                <n-space justify="end" size="medium">
+                                    <n-button @click="RefVideo(item.id)" type="info">
+                                        选中刮削
+                                    </n-button>
+                                </n-space>
+                            </div>
+                        </div>
+                    </div>
+                </n-spin>
+                <template #footer>
+                    <n-space justify="end" size="medium">
+                        <n-button @click="scrapeModal = !scrapeModal" type="info">
+                            关闭
+                        </n-button>
+                        <n-button @click="SearchVideo()" type="info">
+                            搜索
+                        </n-button>
+                    </n-space>
+                </template>
+            </n-card>
+        </n-modal>
     </div>
 </template>
 <script>
@@ -246,9 +314,15 @@ import { onBeforeRouteUpdate } from 'vue-router';
 export default {
     name: 'VideoData',
     setup() {
+        const show = ref(false);
         const loading = ref(true);
+        const is_admin = ref(false);
+        const deleteModal = ref(false);
+        const scrapeModal = ref(false);
+        const updateModal = ref(false);
         const id = ref(null);
         const gallery_type = ref(null);
+        const q = ref(null);
         const backImg = ref(null);
         const data = ref(null);
         const like = ref(null);
@@ -259,6 +333,7 @@ export default {
         const videoRef = ref(null);
         const seasonRef = ref(null);
         const boxsetRef = ref(null);
+        const searchData = ref(null);
         const left = ref(null);
         const form = ref({
             "data_type": "",
@@ -267,6 +342,9 @@ export default {
         left.value = 6 * 170 + 50;
         id.value = proxy.$route.query.id;
         gallery_type.value = proxy.$route.query.gallery_type;
+        if (proxy.$cookies.get('is_admin') == "true") {
+            is_admin.value = true;
+        }
 
         function fetchData() {
             let api = proxy.COMMON.apiUrl + `/v1/api/themovie/id?id=${id.value}`;
@@ -310,6 +388,11 @@ export default {
 
         return {
             id,
+            show,
+            is_admin,
+            deleteModal,
+            scrapeModal,
+            updateModal,
             data,
             like,
             gallery_type,
@@ -324,18 +407,20 @@ export default {
             left,
             form,
             reF,
-             options: [
-                {
-                    label: "编辑修改",
-                    key: "edit"
-                },
+            q,
+            searchData,
+            options: [
                 {
                     label: "重新刮削",
                     key: "scrape"
                 },
             ],
             handleSelect(key) {
-               Snackbar.show({ pos: 'top-center', text: key, showAction: false });
+                if (key == "edit") {
+                    updateModal.value = true;
+                } else if (key == "scrape") {
+                    scrapeModal.value = true;
+                }
             }
         }
     },
@@ -379,6 +464,80 @@ export default {
         },
         ReNewHeart() {
             this.Request(this.COMMON.apiUrl + '/v1/api/heart/renew', this.form)
+        },
+        DeleteVideo() {
+            let api = this.COMMON.apiUrl + '/v1/api/themovie/delete?id=' + this.data.id;
+            if (this.gallery_type == "tv") {
+                api = this.COMMON.apiUrl + '/v1/api/thetv/delete?id=' + this.data.id;
+            }
+            this.axios.post(api, {}, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': this.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    setTimeout(() => {
+                        this.$router.push({
+                            path: "/",
+                        })
+                    }, 1000);
+                } else {
+                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                }
+            }).catch((error) => {
+                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+            });
+        },
+        SearchVideo() {
+            this.show = true;
+            let api = `${this.COMMON.apiUrl}/v1/api/errfile/ref/file/search?name=${this.q}&type=${this.gallery_type}`;
+            this.axios.post(api, {}, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': this.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.searchData = res.data.data.results;
+                } else {
+                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                }
+                this.show = false;
+            }).catch((error) => {
+                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+            });
+        },
+        RefVideo(id) {
+            Snackbar.show({ pos: 'top-center', text: "刮削比较耗时,可离开此页面或者耐心等待....", showAction: false });
+            this.show = true;
+            let api = `${this.COMMON.apiUrl}/v1/api/errfile/ref/video/id?id=${id}&old_id=${this.data.id}&type=${this.gallery_type}`;
+            this.axios.post(api, {}, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': this.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    setTimeout(() => {
+                        this.$router.push({
+                            path: "/video",
+                            query: {
+                                id: id,
+                                gallery_type: this.gallery_type
+                            }
+                        })
+                    }, 1000);
+                } else {
+                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                }
+                this.show = false;
+            }).catch((error) => {
+                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+            });
         },
     }
 }
@@ -639,6 +798,30 @@ span.button-text {
     color: yellow;
 }
 
+.seart-list {
+    margin-top: 20px;
+}
+
+.search-title {
+    font-size: 1.2em;
+}
+
+.search-itme {
+    display: flex;
+    gap: 10px;
+}
+
+.search-overview {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 8;
+    margin-bottom: 10px;
+}
+
+.search-itme img {
+    border-radius: 5px;
+}
 
 @media (max-width: 750px) {
     .view-scroller {
