@@ -69,7 +69,7 @@
                                         <i class='bx bxs-trash-alt'></i>
                                     </span>
                                 </button>
-                                <n-dropdown trigger="hover" size="large" :options="options" @select="handleSelect">
+                                <n-dropdown v-show="is_admin" trigger="hover" size="large" :options="options" @select="handleSelect">
                                     <button class="detailButton circleButton">
                                         <span class="button-icon">
                                             <i class='bx bx-dots-vertical-rounded'></i>
