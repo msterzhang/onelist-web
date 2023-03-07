@@ -69,7 +69,8 @@
                                         <i class='bx bxs-trash-alt'></i>
                                     </span>
                                 </button>
-                                <n-dropdown v-show="is_admin" trigger="hover" size="large" :options="options" @select="handleSelect">
+                                <n-dropdown v-show="is_admin" trigger="hover" size="large" :options="options"
+                                    @select="handleSelect">
                                     <button class="detailButton circleButton">
                                         <span class="button-icon">
                                             <i class='bx bx-dots-vertical-rounded'></i>
@@ -262,12 +263,18 @@
                     </n-button>
                 </template>
                 <n-spin :show="show">
-                    <n-input @keyup.enter="SearchVideo()" v-model:value="q" type="text" size="large" placeholder="">
-                        <template #prefix>
-                            <i class='bx bx-search'></i>
-                        </template>
-                    </n-input>
-                    <div class="seart-list">
+                    <n-form-item v-show="gallery_type == 'tv'" label="资源路径(自行确认)">
+                        <n-input v-model:value="tvPath" type="text" size="large" placeholder="">
+                        </n-input>
+                    </n-form-item>
+                    <n-form-item label="搜索媒体信息">
+                        <n-input @keyup.enter="SearchVideo()" v-model:value="q" type="text" size="large" placeholder="">
+                            <template #prefix>
+                                <i class='bx bx-search'></i>
+                            </template>
+                        </n-input>
+                    </n-form-item>
+                    <div class="search-list">
                         <div class="search-itme" v-for="(item, index) in searchData" :key="index">
                             <div class="search-img">
                                 <img loading="lazy"
@@ -304,6 +311,7 @@
                 </template>
             </n-card>
         </n-modal>
+
     </div>
 </template>
 <script>
@@ -315,6 +323,7 @@ export default {
     name: 'VideoData',
     setup() {
         const show = ref(false);
+        const tvId = ref(false);
         const loading = ref(true);
         const is_admin = ref(false);
         const deleteModal = ref(false);
@@ -335,6 +344,8 @@ export default {
         const boxsetRef = ref(null);
         const searchData = ref(null);
         const left = ref(null);
+        const seasonId = ref(null);
+        const tvPath = ref(null);
         const form = ref({
             "data_type": "",
             "data_id": ""
@@ -345,6 +356,34 @@ export default {
         if (proxy.$cookies.get('is_admin') == "true") {
             is_admin.value = true;
         }
+
+        // 根据Season获得电视剧的path
+        function fetchSeason() {
+            seasonId.value = data.value.the_seasons[0].id;
+            let api = proxy.COMMON.apiUrl + `/v1/api/theseason/id?id=${seasonId.value}`;
+            proxy.axios.post(api, {}, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': proxy.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    if (res.data.data.episodes.length > 0) {
+                        let filePath = res.data.data.episodes[0].url.replaceAll("/d/", "/");
+                        let oldPath = filePath.substr(0, filePath.lastIndexOf("/"))
+                        if (oldPath.search(/S0/)!=-1) {
+                            oldPath = oldPath.substr(0, oldPath.lastIndexOf("/"))
+                        }
+                        tvPath.value = oldPath;
+                    }
+                } else {
+                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                }
+            }).catch((error) => {
+                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+            });
+        }
+
 
         function fetchData() {
             let api = proxy.COMMON.apiUrl + `/v1/api/themovie/id?id=${id.value}`;
@@ -363,6 +402,9 @@ export default {
                     form.value.data_type = gallery_type.value;
                     form.value.data_id = data.value.id;
                     backImg.value = proxy.COMMON.imgUrl + "/t/p/w1920_and_h1080_bestv2" + data.value.backdrop_path
+                    if (gallery_type.value == "tv" && is_admin.value) {
+                        fetchSeason();
+                    }
                     loading.value = false;
                 } else {
                     Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
@@ -388,11 +430,14 @@ export default {
 
         return {
             id,
+            tvId,
             show,
+            tvPath,
             is_admin,
             deleteModal,
             scrapeModal,
             updateModal,
+            seasonId,
             data,
             like,
             gallery_type,
@@ -426,18 +471,24 @@ export default {
     },
     methods: {
         Play() {
-            let season_id = 0
             if (this.gallery_type == "tv") {
-                season_id = this.data.seasons[0].id;
+                this.$router.push({
+                    path: "/player",
+                    query: {
+                        id: this.id,
+                        gallery_type: this.gallery_type,
+                        season_id: this.seasonId,
+                    }
+                })
+            } else {
+                this.$router.push({
+                    path: "/player",
+                    query: {
+                        id: this.id,
+                        gallery_type: this.gallery_type,
+                    }
+                })
             }
-            this.$router.push({
-                path: "/player",
-                query: {
-                    id: this.id,
-                    gallery_type: this.gallery_type,
-                    season_id: season_id,
-                }
-            })
         },
         Request(api, data) {
             this.axios.post(api, data, {
@@ -511,10 +562,16 @@ export default {
             });
         },
         RefVideo(id) {
-            Snackbar.show({ pos: 'top-center', text: "刮削比较耗时,可离开此页面或者耐心等待....", showAction: false });
             this.show = true;
-            let api = `${this.COMMON.apiUrl}/v1/api/errfile/ref/video/id?id=${id}&old_id=${this.data.id}&type=${this.gallery_type}`;
-            this.axios.post(api, {}, {
+            let form = new FormData();
+            let api = `${this.COMMON.apiUrl}/v1/api/errfile/ref/themovie/id?id=${id}&old_id=${this.data.id}`;
+            if (this.gallery_type == "tv") {
+                api = `${this.COMMON.apiUrl}/v1/api/errfile/ref/thetv/id?id=${id}&old_id=${this.data.id}`;
+                form.set("path", this.tvPath)
+            } else {
+                Snackbar.show({ pos: 'top-center', text: "刮削比较耗时,可离开此页面或者耐心等待....", showAction: false });
+            }
+            this.axios.post(api, form, {
                 headers: {
                     'content-type': 'application/json',
                     'Authorization': this.$cookies.get("Authorization")
@@ -522,15 +579,17 @@ export default {
             }).then(res => {
                 if (res.data.code == 200) {
                     Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
-                    setTimeout(() => {
-                        this.$router.push({
-                            path: "/video",
-                            query: {
-                                id: id,
-                                gallery_type: this.gallery_type
-                            }
-                        })
-                    }, 1000);
+                    if (this.gallery_type == "movie") {
+                        setTimeout(() => {
+                            this.$router.push({
+                                path: "/video",
+                                query: {
+                                    id: id,
+                                    gallery_type: this.gallery_type
+                                }
+                            })
+                        }, 1000);
+                    }
                 } else {
                     Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
                 }
@@ -538,6 +597,7 @@ export default {
             }).catch((error) => {
                 Snackbar.show({ pos: 'top-center', text: error, showAction: false });
             });
+
         },
     }
 }
@@ -798,7 +858,7 @@ span.button-text {
     color: yellow;
 }
 
-.seart-list {
+.search-list {
     margin-top: 20px;
 }
 

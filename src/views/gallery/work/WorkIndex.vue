@@ -18,7 +18,7 @@
                         <template #icon>
                             <i class='bx bx-plus-circle'></i>
                         </template>
-                        新增
+                        新增挂载
                     </n-button>
                     <!-- <n-button @click="reF()" strong secondary circle>
                         <i class='bx bx-analyse'></i>
@@ -86,7 +86,7 @@
                 <n-spin :show="show">
                     <n-form :model="work">
                         <n-form-item label="目录">
-                            <n-input size="large" v-model:value="work.path" placeholder="" clearable />
+                            <n-input @focus="handleFocus" size="large" v-model:value="work.path" placeholder="" clearable />
                         </n-form-item>
                         <n-form-item label="是否强制刷新alist缓存后再获取文件?">
                             <n-switch size="large" v-model:value="work.is_ref" placeholder="" clearable />
@@ -170,6 +170,7 @@
 <script>
 import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
+import { useMessage } from 'naive-ui'
 export default {
     name: 'WorkIndex',
     setup() {
@@ -185,6 +186,7 @@ export default {
         const page = ref(1);
         const size = ref(24);
         gallery_uid.value = proxy.$route.query.gallery_uid;
+        const message = useMessage()
         const work = ref({
             "id": null,
             "gallery_id": null,
@@ -225,6 +227,7 @@ export default {
         return {
             data,
             error,
+            message,
             loading,
             gallery_uid,
             showModal,
@@ -244,6 +247,9 @@ export default {
         }
     },
     methods: {
+        handleFocus() {
+             this.message.info("比如'http://alist.cn/云盘/电影'就应该输入'/云盘/电影',或者是本地文件夹绝对路径", { duration: 8000 })
+        },
         CreateShow() {
             this.work = {
                 "id": null,

@@ -17,7 +17,7 @@
                         <i class='bx bx-right-arrow-alt'></i>
                     </n-button>
                 </div>
-                <div class="seriesTab-item">
+                <!-- <div class="seriesTab-item">
                     <n-button @click="showSort = !showSort" strong secondary circle>
                         <i class='bx bx-align-middle'></i>
                     </n-button>
@@ -26,7 +26,7 @@
                     <n-button @click="showFilter = !showFilter" strong secondary circle>
                         <i class='bx bx-filter'></i>
                     </n-button>
-                </div>
+                </div> -->
             </div>
         </div>
         <div class="card-show-content view-card-list">

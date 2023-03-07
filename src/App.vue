@@ -163,7 +163,6 @@
                             </n-card>
                         </n-modal>
                     </n-layout>
-
                     <div v-else>
                         <Login @is-login="LoginUser()" :login="login" :title="title"></Login>
                     </div>
