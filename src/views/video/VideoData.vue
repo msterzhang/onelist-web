@@ -181,24 +181,6 @@
                     <n-scrollbar ref="videoRef" x-scrollable>
                         <div style="white-space: nowrap;">
                             <div class="view-card-list">
-                                <!-- <div class="show-card-item" v-for="(item, index) in like" :key="index">
-                                    <router-link
-                                        :to="{ path: '/video', query: { 
-                                            id: item.id, 
-                                            gallery_type: gallery_type
-                                            } }">
-                                        <div class="show-img">
-                                            <img loading="lazy" class="carousel-img"
-                                                :src='COMMON.imgUrl + "/t/p/w220_and_h330_face/" + item.poster_path'>
-                                        </div>
-                                    </router-link>
-                                    <div v-if="item.video != null" class="show-name">
-                                        {{ item.title }}
-                                    </div>
-                                    <div v-else class="show-name">
-                                        {{ item.name }}
-                                    </div>
-                                </div> -->
                                 <div class="view-item" v-for="(item, index) in like" :key="index">
                                     <router-link :to="{
                                         path: '/video', query: {
@@ -267,6 +249,10 @@
                         <n-input v-model:value="tvPath" type="text" size="large" placeholder="">
                         </n-input>
                     </n-form-item>
+                    <n-form-item v-show="gallery_type == 'movie'" label="电影资源路径">
+                        <n-input disabled="true" v-model:value="file" type="text" size="large" placeholder="">
+                        </n-input>
+                    </n-form-item>
                     <n-form-item label="搜索媒体信息">
                         <n-input @keyup.enter="SearchVideo()" v-model:value="q" type="text" size="large" placeholder="">
                             <template #prefix>
@@ -301,9 +287,6 @@
                 </n-spin>
                 <template #footer>
                     <n-space justify="end" size="medium">
-                        <n-button @click="scrapeModal = !scrapeModal" type="info">
-                            关闭
-                        </n-button>
                         <n-button @click="SearchVideo()" type="info">
                             搜索
                         </n-button>
@@ -315,7 +298,6 @@
     </div>
 </template>
 <script>
-import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
 import { onBeforeRouteUpdate } from 'vue-router';
 
@@ -346,6 +328,7 @@ export default {
         const left = ref(null);
         const seasonId = ref(null);
         const tvPath = ref(null);
+        const file = ref(null);
         const form = ref({
             "data_type": "",
             "data_id": ""
@@ -371,16 +354,16 @@ export default {
                     if (res.data.data.episodes.length > 0) {
                         let filePath = res.data.data.episodes[0].url.replaceAll("/d/", "/");
                         let oldPath = filePath.substr(0, filePath.lastIndexOf("/"))
-                        if (oldPath.search(/S0/)!=-1) {
+                        if (oldPath.search(/S0/) != -1) {
                             oldPath = oldPath.substr(0, oldPath.lastIndexOf("/"))
                         }
                         tvPath.value = oldPath;
                     }
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -404,13 +387,15 @@ export default {
                     backImg.value = proxy.COMMON.imgUrl + "/t/p/w1920_and_h1080_bestv2" + data.value.backdrop_path
                     if (gallery_type.value == "tv" && is_admin.value) {
                         fetchSeason();
+                    } else {
+                        file.value = data.value.url.replaceAll("/d/", "/");
                     }
                     loading.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -450,6 +435,7 @@ export default {
             error,
             backImg,
             left,
+            file,
             form,
             reF,
             q,
@@ -499,12 +485,12 @@ export default {
             }).then(res => {
                 if (res.data.code == 200) {
                     this.reF();
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
         ReNewPlayed() {
@@ -528,17 +514,17 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                     setTimeout(() => {
                         this.$router.push({
                             path: "/",
                         })
                     }, 1000);
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
         SearchVideo() {
@@ -551,14 +537,14 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                     this.searchData = res.data.data.results;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
                 this.show = false;
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
         RefVideo(id) {
@@ -569,7 +555,7 @@ export default {
                 api = `${this.COMMON.apiUrl}/v1/api/errfile/ref/thetv/id?id=${id}&old_id=${this.data.id}`;
                 form.set("path", this.tvPath)
             } else {
-                Snackbar.show({ pos: 'top-center', text: "刮削比较耗时,可离开此页面或者耐心等待....", showAction: false });
+                this.COMMON.ShowMsg("刮削比较耗时,可离开此页面或者耐心等待....")
             }
             this.axios.post(api, form, {
                 headers: {
@@ -578,7 +564,7 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                     if (this.gallery_type == "movie") {
                         setTimeout(() => {
                             this.$router.push({
@@ -591,11 +577,11 @@ export default {
                         }, 1000);
                     }
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
                 this.show = false;
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
 
         },

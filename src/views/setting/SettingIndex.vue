@@ -38,7 +38,6 @@
 
 <script>
 
-import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
 export default {
     name: "SettingIndex",
@@ -65,10 +64,10 @@ export default {
                     config.value = res.data.data;
                     load.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+               proxy.COMMON.ShowMsg(error);
                 load.value = false;
             });
         }
@@ -86,10 +85,10 @@ export default {
                     localStorage.setItem("img_url", config.value.img_url);
                     location.reload();
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+               proxy.COMMON.ShowMsg(error);
                 load.value = false;
             });
         }

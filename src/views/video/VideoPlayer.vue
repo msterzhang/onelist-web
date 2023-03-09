@@ -8,11 +8,18 @@
                 </div>
                 <div class="showContainer">
                     <div class="data-header">
-                        <div class="data-title">
-                            {{ gallery_type == "tv" ? data.name : data.title }}
+                        <div class="header-left">
+                            <div class="data-title">
+                                {{ gallery_type == "tv" ? data.name : data.title }}
+                            </div>
+                            <div class="season-title">
+                                {{ season != nul ? season.name : "" }}
+                            </div>
                         </div>
-                        <div class="season-title">
-                            {{ season != nul ? season.name : "" }}
+                        <div class="header-right">
+                            <n-button @click="showModal = !showModal" strong secondary circle>
+                                <i class='bx bx-dots-vertical-rounded'></i>
+                            </n-button>
                         </div>
                     </div>
                     <div class="data-content">
@@ -193,16 +200,96 @@
                 </div>
             </n-grid-item>
         </n-grid>
+        <n-modal transform-origin="center" v-model:show="showModal">
+            <n-card style="width: 600px" title="外部播放器" :bordered="false" size="huge" role="dialog" aria-modal="true">
+                <template #header-extra>
+                    <n-button @click="showModal = !showModal" strong secondary circle>
+                        <i class='bx bx-x'></i>
+                    </n-button>
+                </template>
+                <ul class="play-list">
+                    <li class="play-item">
+                        <a :href="'iina://weblink/?url=' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/iina.webp" alt="">
+                                </template>
+                                IINA
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'potplayer://' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/potplayer.webp" alt="">
+                                </template>
+                                Potplayer
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'vlc://' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/vlc.webp" alt="">
+                                </template>
+                                vcl
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'nplayer-' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/nplayer.webp" alt="">
+                                </template>
+                                nplayer
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'infuse://x-callback-url/play?url=' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/infuse.webp" alt="">
+                                </template>
+                                infuse
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'intent:' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/mxplayer.webp" alt="">
+                                </template>
+                                Mxplayer
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'intent:' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/mxplayer-pro.webp" alt="">
+                                </template>
+                                Mxplayer-Pro
+                            </n-tooltip>
+                        </a>
+                    </li>
+                </ul>
+            </n-card>
+        </n-modal>
     </div>
 </template>
 <script>
-import Snackbar from 'node-snackbar';
 import Artplayer from "./ArtPlayer.vue";
 
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import { getCurrentInstance, onMounted, ref } from "vue";
-import { onBeforeRouteUpdate, onBeforeRouteLeave } from 'vue-router';
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 export default {
     name: 'VideoPlayer',
     components: {
@@ -210,6 +297,7 @@ export default {
     },
     setup() {
         const loading = ref(true);
+        const showModal = ref(false);
         const speed = ref(0);
         const urlList = ref([]);
         const error = ref(null);
@@ -391,10 +479,10 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code != 200) {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -418,10 +506,10 @@ export default {
                         fetchPlayed();
                     }
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -439,10 +527,10 @@ export default {
                     selectList();
                     loading.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -456,9 +544,9 @@ export default {
             }).then(res => {
                 if (res.data.code == 200) {
                     if (res.data.data.length > 0) {
-                          alist_host.value = res.data.data;
+                        alist_host.value = res.data.data;
                     } else {
-                          alist_host.value = proxy.COMMON.apiUrl+"/file/";
+                        alist_host.value = proxy.COMMON.apiUrl + "/file/";
                     }
                     if (gallery_type.value == "movie") {
                         url.value = alist_host.value + data.value.url;
@@ -468,16 +556,18 @@ export default {
                     }
 
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
         const artF = async (data) => {
             art = data;
             art.on('restart', () => {
+                url.value = encodeURI(art.url);
+                console.log(url.value)
                 console.log("切换链接")
             });
         }
@@ -491,7 +581,7 @@ export default {
             fetchData();
         });
 
-        onBeforeRouteLeave((to, from) =>{
+        onBeforeRouteLeave((to, from) => {
             document.title = proxy.COMMON.title;
         });
         onMounted(() => {
@@ -501,6 +591,7 @@ export default {
 
         return {
             season_id,
+            showModal,
             id,
             data,
             like,
@@ -576,6 +667,11 @@ h1 {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
+}
+
+.data-header {
+    display: flex;
+    justify-content: space-between;
 }
 
 .show-card-list {
@@ -700,5 +796,29 @@ h1 {
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 4;
+}
+
+.play-list {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.play-list .play-item {
+
+    list-style: none;
+}
+
+img.play-icon {
+    width: 60px;
+    height: 60px;
+}
+
+@media (max-width: 767px) {
+    img.play-icon {
+        width: 40px;
+        height: 40px;
+    }
 }
 </style>

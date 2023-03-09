@@ -117,7 +117,6 @@
 </template>
 <script>
 import { NButton, useDialog } from "naive-ui";
-import Snackbar from 'node-snackbar';
 import { defineComponent, getCurrentInstance, h, onMounted, ref } from "vue";
 
 
@@ -208,10 +207,10 @@ export default defineComponent({
                     num.value = Math.round(res.data.num / size.value) + 1;
                     loading.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+               proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -256,12 +255,12 @@ export default defineComponent({
             }).then(res => {
                 if (res.data.code == 200) {
                     this.reFData();
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+               this.COMMON.ShowMsg(error);
             });
         },
         ShowCreate() {
@@ -295,16 +294,16 @@ export default defineComponent({
                         }
                     }).then(res => {
                         if (res.data.code == !200) {
-                            Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                            this.COMMON.ShowMsg(res.data.msg)
                         }
                     }).catch((error) => {
-                        Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                       this.COMMON.ShowMsg(error);
                     });
                 })
             ).then(() => {
                 this.checkedRowKeys = [];
                 this.reFData();
-                Snackbar.show({ pos: 'top-center', text: "处理完毕!", showAction: false });
+                this.COMMON.ShowMsg("处理完毕!");
             })
         }
     },

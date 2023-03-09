@@ -57,18 +57,20 @@
                                     </n-space>
                                 </div>
                                 <div class="gallery-show">
-                                    <n-button class="add-video" @click="showAdd(item)" type="info">
-                                        <template #icon>
-                                            <i class='bx bx-plus-circle'></i>
-                                        </template>
-                                        添加资源
-                                    </n-button>
-                                    <n-button @click="addPath(item)" type="info">
-                                        <template #icon>
-                                            <i class='bx bx-folder-plus'></i>
-                                        </template>
-                                        挂载目录
-                                    </n-button>
+                                    <n-space justify="end" size="medium">
+                                        <n-button class="add-video" @click="showAdd(item)" type="info">
+                                            <template #icon>
+                                                <i class='bx bx-plus-circle'></i>
+                                            </template>
+                                            添加资源
+                                        </n-button>
+                                        <n-button @click="addPath(item)" type="info">
+                                            <template #icon>
+                                                <i class='bx bx-folder-plus'></i>
+                                            </template>
+                                            挂载目录
+                                        </n-button>
+                                    </n-space>
                                 </div>
                             </div>
                         </template>
@@ -250,7 +252,6 @@
 </template>
 <script>
 import { useMessage } from 'naive-ui';
-import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
 export default {
     name: 'GalleryIndex',
@@ -302,10 +303,10 @@ export default {
                     data.value = res.data.data;
                     loading.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -369,12 +370,12 @@ export default {
             }).then(res => {
                 if (res.data.code == 200) {
                     this.gallery.image = res.data.data;
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
         CreateShow() {
@@ -404,14 +405,15 @@ export default {
             }).then(res => {
                 if (res.data.code == 200) {
                     this.$emit("refApp");
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                     this.reF();
-
+                    this.showModal = false;
+                    this.updateModal = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
         Create() {
@@ -451,7 +453,7 @@ export default {
             if (this.addType == "tv") {
                 api = this.COMMON.apiUrl + '/v1/api/thetv/add'
             } else {
-                Snackbar.show({ pos: 'top-center', text: "刮削比较耗时,可离开此页面或者耐心等待....", showAction: false });
+                this.COMMON.ShowMsg("刮削比较耗时,可离开此页面或者耐心等待....");
             }
             this.addvideo.the_movie_id = parseInt(this.addvideo.the_movie_id)
             this.addvideo.the_tv_id = parseInt(this.addvideo.the_tv_id)
@@ -462,13 +464,14 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
                 this.show = false;
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
+                this.show = false;
             });
         },
         SearchVideo() {
@@ -481,17 +484,17 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                     if (res.data.data.results.length == 0) {
-                        Snackbar.show({ pos: 'top-center', text: "未查询到任何资源!", showAction: false });
+                        this.COMMON.ShowMsg("未查询到任何资源!")
                     }
                     this.searchData = res.data.data.results;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
                 this.show = false;
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
     }
@@ -507,11 +510,6 @@ export default {
     margin-bottom: 12px;
 }
 
-.gallery-tool {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-}
 
 .content-header-title {
     font-size: 1.4em;
@@ -519,11 +517,6 @@ export default {
 
 .gallery-data {
     font-size: 18px;
-}
-
-.gallery-show {
-    display: flex;
-    gap: 10px;
 }
 
 .search-list {

@@ -114,7 +114,6 @@
     </div>
 </template>
 <script>
-import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
 import { onBeforeRouteUpdate } from 'vue-router';
 
@@ -150,7 +149,7 @@ export default {
                 }
 
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -183,114 +182,6 @@ export default {
             left,
             refresh
         }
-    },
-    methods: {
-        Player() {
-            let userId = this.$cookies.get("UserId")
-            this.axios.post(this.COMMON.apiUrl + `Users/${userId}/PlayedItems/${this.id}`, {}, {
-                headers: {
-                    'content-type': 'application/json',
-                    'X-Emby-Authorization': this.$cookies.get("Authorization")
-                }
-            }).then(res => {
-                if (res.status == 200) {
-                    this.$router.push({
-                        path: "/player",
-                        query: {
-                            id: this.data.Id,
-                            type: this.data.Type
-                        }
-                    })
-                }
-            }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
-            });
-        },
-        EditPlayed(data) {
-            let userId = this.$cookies.get("UserId")
-            if (data.UserData.Played) {
-                this.axios.delete(this.COMMON.apiUrl + `Users/${userId}/PlayedItems/${data.Id}`, {
-                    headers: {
-                        'content-type': 'application/json',
-                        'X-Emby-Authorization': this.$cookies.get("Authorization")
-                    }
-                }).then(res => {
-                    if (res.status == 200) {
-                        this.refresh();
-                    } else {
-                        Snackbar.show({ pos: 'top-center', text: "标记失败", showAction: false });
-                    }
-                }).catch((error) => {
-                    Snackbar.show({ pos: 'top-center', text: error, showAction: false });
-                });
-            } else {
-                this.axios.post(this.COMMON.apiUrl + `Users/${userId}/PlayedItems/${data.Id}`, {}, {
-                    headers: {
-                        'content-type': 'application/json',
-                        'X-Emby-Authorization': this.$cookies.get("Authorization")
-                    }
-                }).then(res => {
-                    if (res.status == 200) {
-                        this.refresh();
-                    } else {
-                        Snackbar.show({ pos: 'top-center', text: "标记失败", showAction: false });
-                    }
-                }).catch((error) => {
-                    Snackbar.show({ pos: 'top-center', text: error, showAction: false });
-                });
-            }
-        },
-        EditFavorite(data) {
-            let userId = this.$cookies.get("UserId")
-            if (data.UserData.IsFavorite) {
-                this.axios.delete(this.COMMON.apiUrl + `Users/${userId}/FavoriteItems/${data.Id}`, {
-                    headers: {
-                        'content-type': 'application/json',
-                        'X-Emby-Authorization': this.$cookies.get("Authorization")
-                    }
-                }).then(res => {
-                    if (res.status == 200) {
-                        this.refresh();
-                    } else {
-                        Snackbar.show({ pos: 'top-center', text: "标记失败", showAction: false });
-                    }
-                }).catch((error) => {
-                    Snackbar.show({ pos: 'top-center', text: error, showAction: false });
-                });
-            } else {
-                this.axios.post(this.COMMON.apiUrl + `Users/${userId}/FavoriteItems/${data.Id}`, {}, {
-                    headers: {
-                        'content-type': 'application/json',
-                        'X-Emby-Authorization': this.$cookies.get("Authorization")
-                    }
-                }).then(res => {
-                    if (res.status == 200) {
-                        this.refresh();
-                    } else {
-                        Snackbar.show({ pos: 'top-center', text: "标记失败", showAction: false });
-                    }
-                }).catch((error) => {
-                    Snackbar.show({ pos: 'top-center', text: error, showAction: false });
-                });
-            }
-        },
-        GetCardimage(item) {
-            let imgUrl = "";
-            if (item.ImageTags != null) {
-                imgUrl = this.COMMON.apiUrl + 'Items/' + item.Id + '/Images/Primary?fillHeight=720&fillWidth=480&quality=96&tag=' + item.ImageTags.Primary;
-            }
-            if (item.Type == "Season" && JSON.stringify(item.ImageTags) == '{}') {
-                imgUrl = this.COMMON.apiUrl + 'Items/' + item.SeriesId + '/Images/Primary?fillHeight=720&fillWidth=480&quality=96&tag=' + item.SeriesPrimaryImageTag;
-            }
-            return imgUrl
-        },
-        GetUserimage(item) {
-            let imgUrl = "https://wework.qpic.cn/wwpic/601192_Ct0fUXa0TYmcR68_1669451434/0";
-            if (item.PrimaryImageTag != null) {
-                imgUrl = this.COMMON.apiUrl + 'Items/' + item.Id + '/Images/Primary?fillHeight=335&fillWidth=223&quality=96&tag=' + item.PrimaryImageTag;
-            }
-            return imgUrl
-        },
     }
 }
 </script >

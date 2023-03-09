@@ -80,7 +80,6 @@
 </template>
 
 <script>
-import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
 import { onBeforeRouteUpdate } from 'vue-router';
 
@@ -133,7 +132,7 @@ export default {
                 }
 
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
 
         }

@@ -1,5 +1,5 @@
 {
-  "name": "server-admin",
+  "name": "onelist-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,7 +23,6 @@
     "vue": "^3.2.23",
     "vue-axios": "^3.2.4",
     "vue-cookies": "^1.7.4",
-    "vue-long-click": "^0.1.0",
     "vue-router": "^4.0.9",
     "vue-template-compiler": "^2.6.14"
   },

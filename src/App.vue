@@ -174,7 +174,6 @@
 
 <script>
 import { darkTheme } from 'naive-ui';
-import Snackbar from 'node-snackbar';
 import { defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
 import Login from './components/Login';
 
@@ -236,12 +235,22 @@ export default defineComponent({
                     let config = res.data.data;
                     localStorage.setItem("title", config.title);
                     localStorage.setItem("img_url", config.img_url);
+                    let link = config.faviconico_url;
+                    let favicon = document.querySelector('link[rel="icon"]');
+                    if (favicon !== null) {
+                        favicon.href = link;
+                    } else {
+                        favicon = document.createElement("link");
+                        favicon.rel = "icon";
+                        favicon.href = link;
+                        document.head.appendChild(favicon);
+                    }
                     getData();
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
                 load.value = false;
             });
         }
@@ -260,10 +269,10 @@ export default defineComponent({
                     }, 1500);
                     load.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
                 load.value = false;
             });
         }
@@ -276,16 +285,17 @@ export default defineComponent({
                         'Authorization': proxy.$cookies.get("Authorization")
                     }
                 }).then(res => {
+
                     if (res.data.code == 200) {
                         login.value = true;
                         is_admin.value = res.data.data.is_admin;
                         proxy.$cookies.set('is_admin', is_admin.value, 60 * 60 * 24 * 7)
                         getConfig();
                     } else {
-                        Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                        proxy.COMMON.ShowMsg(res.data.msg)
                     }
                 }).catch((error) => {
-                    Snackbar.show({ pos: 'top-center', text: "登录已过期,请重新登录!", showAction: false });
+                    proxy.COMMON.ShowMsg("登录已过期,请重新登录!")
                     console.log(error)
                     load.value = false;
                 });

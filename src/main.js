@@ -6,12 +6,10 @@ import VueCookies from 'vue-cookies'
 import App from './App.vue'
 import router from './router'
 
-import { longClickDirective } from 'vue-long-click'
 import global from './components/common.vue'
 
 
 import "node-snackbar/dist/snackbar.min.css"
-
 import 'boxicons/css/boxicons.min.css'
 
 

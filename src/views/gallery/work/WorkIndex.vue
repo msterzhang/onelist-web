@@ -168,9 +168,8 @@
     </div>
 </template>
 <script>
-import Snackbar from 'node-snackbar';
+import { useMessage } from 'naive-ui';
 import { getCurrentInstance, onMounted, ref } from "vue";
-import { useMessage } from 'naive-ui'
 export default {
     name: 'WorkIndex',
     setup() {
@@ -211,10 +210,10 @@ export default {
                     data.value = res.data.data;
                     loading.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -248,7 +247,7 @@ export default {
     },
     methods: {
         handleFocus() {
-             this.message.info("比如'http://alist.cn/云盘/电影'就应该输入'/云盘/电影',或者是本地文件夹绝对路径", { duration: 8000 })
+            this.message.info("比如'http://alist.cn/云盘/电影'就应该输入'/云盘/电影',或者是本地文件夹绝对路径", { duration: 8000 })
         },
         CreateShow() {
             this.work = {
@@ -285,13 +284,15 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
+                    this.showModal = false;
+                    this.updateModal = false;
                     this.reF();
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
         Create() {
@@ -307,14 +308,15 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    this.show = false;
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                     this.reF();
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
+                this.show = false;
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
+                this.show = false;
             });
         },
         Update() {
@@ -338,9 +340,9 @@ export default {
                     'Authorization': this.$cookies.get("Authorization")
                 }
             }).then(res => {
-                Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                this.COMMON.ShowMsg(res.data.msg)
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         }
     }

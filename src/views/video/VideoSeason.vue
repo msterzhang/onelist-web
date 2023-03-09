@@ -81,8 +81,8 @@
                     <div class="episode-card-list">
                         <div class="episode-card-item" v-for="(item, index) in season.episodes" :key="index">
                             <div @click="ItemPlayer(item, index)" class="episode-img">
-                                <img loading="lazy" :src='COMMON.imgUrl + "/t/p/w710_and_h400_multi_faces" + item.still_path'
-                                    alt="">
+                                <img loading="lazy"
+                                    :src='COMMON.imgUrl + "/t/p/w710_and_h400_multi_faces" + item.still_path' alt="">
                             </div>
                             <div class="episode-content">
                                 <div class="episode-name">
@@ -102,26 +102,117 @@
                                 </div>
                             </div>
                             <div class="episode-buttons">
-                                <button @click="PlayEpisod(index+1)" :class="['detailButton', 'circleButton']">
-                                    <span class="button-icon">
-                                        <i class='bx bxs-right-arrow'></i>
-                                    </span>
-                                </button>
-                                <button class="detailButton circleButton">
-                                    <span class="button-icon">
-                                        <i class='bx bx-dots-vertical-rounded'></i>
-                                    </span>
-                                </button>
+                                <n-tooltip trigger="hover">
+                                    <template #trigger>
+                                              <button @click="PlayEpisod(index + 1)" :class="['detailButton', 'circleButton']">
+                                        <span class="button-icon">
+                                            <i class='bx bxs-right-arrow'></i>
+                                        </span>
+                                    </button>
+                                    </template>
+                                    播放
+                                </n-tooltip>
+                                <n-tooltip trigger="hover">
+                                    <template #trigger>
+                                        <button @click="OutsidePlay(item.url)" class="detailButton circleButton">
+                                            <span class="button-icon">
+                                                <i class='bx bx-dots-vertical-rounded'></i>
+                                            </span>
+                                        </button>
+                                    </template>
+                                    外部播放器
+                                </n-tooltip>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <n-modal transform-origin="center" v-model:show="showModal">
+            <n-card style="width: 600px" title="外部播放器" :bordered="false" size="huge" role="dialog" aria-modal="true">
+                <template #header-extra>
+                    <n-button @click="showModal = !showModal" strong secondary circle>
+                        <i class='bx bx-x'></i>
+                    </n-button>
+                </template>
+                <ul class="play-list">
+                    <li class="play-item">
+                        <a :href="'iina://weblink/?url=' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/iina.webp" alt="">
+                                </template>
+                                IINA
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'potplayer://' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/potplayer.webp" alt="">
+                                </template>
+                                Potplayer
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'vlc://' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/vlc.webp" alt="">
+                                </template>
+                                vcl
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'nplayer-' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/nplayer.webp" alt="">
+                                </template>
+                                nplayer
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'infuse://x-callback-url/play?url=' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/infuse.webp" alt="">
+                                </template>
+                                infuse
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'intent:' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/mxplayer.webp" alt="">
+                                </template>
+                                Mxplayer
+                            </n-tooltip>
+                        </a>
+                    </li>
+                    <li class="play-item">
+                        <a :href="'intent:' + url" target="_blank">
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <img class="play-icon" src="/images/mxplayer-pro.webp" alt="">
+                                </template>
+                                Mxplayer-Pro
+                            </n-tooltip>
+                        </a>
+                    </li>
+                </ul>
+            </n-card>
+        </n-modal>
     </div>
 </template>
 <script>
-import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
 import { onBeforeRouteUpdate } from 'vue-router';
 
@@ -129,7 +220,10 @@ export default {
     name: 'VideoSeason',
     setup() {
         const loading = ref(true);
+        const showModal = ref(false);
+        const url = ref(false);
         const tv_id = ref(null);
+        const alist_host = ref(null);
         const backImg = ref(null);
         const data = ref(null);
         const season = ref(null);
@@ -144,8 +238,7 @@ export default {
             "data_type": "",
             "data_id": ""
         })
-        
-        // Season
+
         function fetchSeason() {
             let api = proxy.COMMON.apiUrl + `/v1/api/theseason/id?id=${seasonId.value}`;
             proxy.axios.post(api, {}, {
@@ -158,13 +251,35 @@ export default {
                     season.value = res.data.data;
                     loading.value = false;
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
+        function fetchHost() {
+            let api = `${proxy.COMMON.apiUrl}/v1/api/gallery/host?id=${data.value.gallery_uid}`;
+            proxy.axios.post(api, {}, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': proxy.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    if (res.data.data.length > 0) {
+                        alist_host.value = res.data.data;
+                    } else {
+                        alist_host.value = proxy.COMMON.apiUrl + "/file/";
+                    }
+                    fetchSeason();
+                } else {
+                    proxy.COMMON.ShowMsg(res.data.msg)
+                }
+            }).catch((error) => {
+                proxy.COMMON.ShowMsg(error);
+            });
+        }
 
         function fetchData() {
             let api = proxy.COMMON.apiUrl + `/v1/api/thetv/id?id=${tv_id.value}`;
@@ -179,12 +294,12 @@ export default {
                     backImg.value = proxy.COMMON.imgUrl + "/t/p/w1920_and_h1080_bestv2" + data.value.backdrop_path
                     form.value.data_type = gallery_type.value;
                     form.value.data_id = data.value.id;
-                    fetchSeason();
+                    fetchHost();
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    proxy.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
         }
 
@@ -206,6 +321,9 @@ export default {
         });
         return {
             tv_id,
+            showModal,
+            alist_host,
+            url,
             data,
             seasonId,
             gallery_type,
@@ -228,14 +346,18 @@ export default {
                 }
             })
         },
-         PlayEpisod(speed) {
+        OutsidePlay(url) {
+            this.url = this.alist_host + url;
+            this.showModal = !this.showModal;
+        },
+        PlayEpisod(speed) {
             this.$router.push({
                 path: "/player",
                 query: {
                     id: this.tv_id,
                     gallery_type: this.gallery_type,
                     season_id: this.seasonId,
-                    speed:speed
+                    speed: speed
                 }
             })
         },
@@ -248,12 +370,12 @@ export default {
             }).then(res => {
                 if (res.data.code == 200) {
                     this.reF();
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                this.COMMON.ShowMsg(error);
             });
         },
         ReNewPlayed() {
@@ -472,11 +594,27 @@ span.button-text {
 .episode-buttons .detailButton.circleButton {
     margin-right: 10px;
     margin-bottom: 10px;
-    /* justify-content: center; */
 }
 
 .show-title h3 {
     font-size: 1.2em;
+}
+
+
+.play-list {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.play-list .play-item {
+    list-style: none;
+}
+
+img.play-icon {
+    width: 60px;
+    height: 60px;
 }
 
 @media (max-width: 750px) {
@@ -491,6 +629,11 @@ span.button-text {
 
     .episode-buttons {
         justify-content: center;
+    }
+
+    img.play-icon {
+        width: 40px;
+        height: 40px;
     }
 }
 </style>

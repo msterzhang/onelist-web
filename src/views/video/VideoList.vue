@@ -17,7 +17,7 @@
                         <i class='bx bx-right-arrow-alt'></i>
                     </n-button>
                 </div>
-                <!-- <div class="seriesTab-item">
+                <div class="seriesTab-item">
                     <n-button @click="showSort = !showSort" strong secondary circle>
                         <i class='bx bx-align-middle'></i>
                     </n-button>
@@ -26,7 +26,7 @@
                     <n-button @click="showFilter = !showFilter" strong secondary circle>
                         <i class='bx bx-filter'></i>
                     </n-button>
-                </div> -->
+                </div>
             </div>
         </div>
         <div class="card-show-content view-card-list">
@@ -45,7 +45,7 @@
                             }}
                             </div>
                             <div v-if="item.played" class="view-item-tag count">
-                                <i class='bx bx-check' ></i>
+                                <i class='bx bx-check'></i>
                             </div>
                         </div>
                     </div>
@@ -110,33 +110,20 @@
                 <div class="sort-list">
                     <n-radio-group v-model:value="genre" name="radiogroup">
                         <n-space vertical>
-                            <n-radio @change="handleChange" class="sort-item" v-for="item in filters.Genres" :key="item"
+                            <n-radio @change="filterChange" class="sort-item" v-for="item in filters" :key="item"
                                 :value="item">
-                                {{ item }}
+                                {{ item.name }}
                             </n-radio>
                         </n-space>
                     </n-radio-group>
                 </div>
-                <div class="sort-title">
-                    年份
-                </div>
-                <div class="sort-list">
-                    <n-radio-group v-model:value="year" name="radiogroup">
-                        <n-space vertical>
-                            <n-radio @change="handleChange" class="sort-item" v-for="item in filters.Years" :key="item"
-                                :value="item">
-                                {{ item }}
-                            </n-radio>
-                        </n-space>
-                    </n-radio-group>
-                </div>
+
             </n-card>
         </n-modal>
     </div>
 </template>
 
 <script>
-import Snackbar from 'node-snackbar';
 import { getCurrentInstance, onMounted, ref } from "vue";
 import { onBeforeRouteUpdate } from 'vue-router';
 
@@ -148,14 +135,15 @@ export default {
         const size = ref(null);
         const page = ref(null);
         const data = ref(null);
+
         const filters = ref(null);
         const error = ref(null);
         const loading = ref(true);
         const { proxy } = getCurrentInstance();
         const num = ref(null);
         const search = ref(false);
-        const mode = ref("DateCreated");
-        const order = ref("Descending");
+        const mode = ref("updated_at");
+        const order = ref("DESC");
         const genre = ref("");
         const year = ref("");
         gallery_uid.value = proxy.$route.query.gallery_uid;
@@ -190,11 +178,27 @@ export default {
             pageText.value = num.value + " 的 " + (page.value - 1) * size.value + "-" + ((page.value - 1) * size.value + si);
         }
 
+        function fetchGenreData() {
+            let api = `${proxy.COMMON.apiUrl}/v1/api/genre/list?page=1&size=100`;
+            proxy.axios.post(api, {}, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': proxy.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    filters.value = res.data.data;
+                }
+                loading.value = false;
+            }).catch((error) => {
+                proxy.COMMON.ShowMsg(error);
+            });
+        }
 
         function fetchData() {
-            let api = proxy.COMMON.apiUrl + `/v1/api/thetv/gallery/list?id=` + gallery_uid.value + "&page=" + page.value + "&size=" + size.value;
+            let api = `${proxy.COMMON.apiUrl}/v1/api/thetv/sort?gallery_uid=${gallery_uid.value}&mode=${mode.value}&order=${order.value}&page=${page.value}&size=${size.value}`;
             if (gallery_type.value == "movie") {
-                api = proxy.COMMON.apiUrl + `/v1/api/themovie/gallery/list?id=` + gallery_uid.value + "&page=" + page.value + "&size=" + size.value;
+                api = `${proxy.COMMON.apiUrl}/v1/api/themovie/sort?gallery_uid=${gallery_uid.value}&mode=${mode.value}&order=${order.value}&page=${page.value}&size=${size.value}`;
             }
             proxy.axios.post(api, {}, {
                 headers: {
@@ -205,15 +209,43 @@ export default {
                 if (res.data.code == 200) {
                     data.value = res.data.data;
                     num.value = res.data.num;
-                    loading.value = false;
+
                     init(gallery_uid.value);
                     initPageText();
+                    fetchGenreData();
                 }
 
             }).catch((error) => {
-                Snackbar.show({ pos: 'top-center', text: error, showAction: false });
+                proxy.COMMON.ShowMsg(error);
             });
+        }
 
+        function fetchfilterData(id) {
+            let api = `${proxy.COMMON.apiUrl}/v1/api/genre/filte?id=${id}&gallery_uid=${gallery_uid.value}&gallery_type=${gallery_type.value}&mode=${mode.value}&order=${order.value}&page=${page.value}&size=${size.value}`;
+            proxy.axios.post(api, {}, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': proxy.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    if (gallery_type.value == "movie") {
+                        if (res.data.data.the_movies == null) {
+                            proxy.COMMON.ShowMsg("未查询到相关内容!");
+                        }
+                        data.value = res.data.data.the_movies;
+                    } else {
+                        if (res.data.data.the_tvs == null) {
+                            proxy.COMMON.ShowMsg("未查询到相关内容!");
+                        }
+                        data.value = res.data.data.the_tvs;
+                    }
+                    num.value = res.data.num;
+                    initPageText();
+                }
+            }).catch((error) => {
+                proxy.COMMON.ShowMsg(error);
+            });
         }
 
         onBeforeRouteUpdate((to, from) => {
@@ -249,32 +281,28 @@ export default {
                 page.value = 1;
                 fetchData();
             },
+            filterChange(e) {
+                page.value = 1;
+                fetchfilterData(genre.value.id)
+            },
             showSort: ref(false),
             showFilter: ref(false),
             mode: mode,
             modes: [
                 {
-                    value: "SortName",
-                    label: "名称"
+                    value: 'updated_at',
+                    label: '更新时间'
                 },
                 {
-                    value: 'CommunityRating',
-                    label: '评分'
-                },
-                {
-                    value: 'DateCreated',
+                    value: 'created_at',
                     label: '加入时间'
                 },
                 {
-                    value: 'SeriesDatePlayed',
-                    label: '播放日期'
+                    value: 'vote_average',
+                    label: '评分'
                 },
                 {
-                    value: 'OfficialRating',
-                    label: '家长分级'
-                },
-                {
-                    value: 'PremiereDate',
+                    value: 'release_date',
                     label: '发行时间'
                 }
             ].map((s) => {
@@ -284,11 +312,11 @@ export default {
             order: order,
             orders: [
                 {
-                    value: "Ascending",
+                    value: "ASC",
                     label: "升序"
                 },
                 {
-                    value: 'Descending',
+                    value: 'DESC',
                     label: '降序'
                 }
             ].map((s) => {
@@ -298,28 +326,10 @@ export default {
         }
     },
     methods: {
-        GetImage(item) {
-            let imgUrl = this.COMMON.apiUrl + 'Items/' + item.Id + '/Images/Primary?fillHeight=199&fillWidth=355&quality=96&tag=' + item.Etag;
-
-            if (item.Etag == undefined) {
-                imgUrl = this.COMMON.apiUrl + 'Items/' + item.ParentBackdropItemId + '/Images/Backdrop?fillHeight=200&fillWidth=355&quality=96&tag=' + item.ImageTags.Primary;
-            }
-            if (item.ParentBackdropItemId == undefined && item.Etag == undefined) {
-                imgUrl = "https://wework.qpic.cn/wwpic/940767_LbJj4kYaR6G12t1_1669304834/0";
-            }
-            return imgUrl
-        },
-        GetICardimage(item) {
-            let imgUrl = this.COMMON.apiUrl + 'Items/' + item.Id + '/Images/Primary?fillHeight=315&fillWidth=223&quality=96&tag=' + item.ImageTags.Primary;
-            if (item.ImageTags.Primary == null) {
-                imgUrl = "https://wework.qpic.cn/wwpic/713831_s31RnUK8SlmEuBO_1669537343/0";
-            }
-            return imgUrl
-        },
         BackPage() {
             this.page = this.page - 1;
             if (this.page <= 0) {
-                Snackbar.show({ pos: 'top-center', text: "已经是第1页啦", showAction: false });
+                this.COMMON.ShowMsg("已经是第1页啦!")
                 this.page = 1;
             }
             this.refresh();

@@ -15,15 +15,16 @@
                     <div class="create-post-from">
                         <div class="form-control">
                             <div class="icon">
-                               <i class='bx bx-envelope' ></i>
+                                <i class='bx bx-envelope'></i>
                             </div>
                             <input v-model="user.user_email" type="text" name="email" placeholder="账号" required="">
                         </div>
                         <div class="form-control">
                             <div class="icon">
-                               <i class='bx bx-key' ></i>
+                                <i class='bx bx-key'></i>
                             </div>
-                            <input v-model="user.user_password" type="password" name="password" placeholder="密码" required="">
+                            <input v-model="user.user_password" type="password" name="password" placeholder="密码"
+                                required=""  autocomplete="off">
                         </div>
                         <div class="form-control">
                             <button class="btn login-btn" @click="LoginUser()">登录</button>
@@ -36,8 +37,6 @@
 </template>
 
 <script>
-import Snackbar from 'node-snackbar';
-
 export default {
     name: "Login",
     data() {
@@ -67,9 +66,9 @@ export default {
         RegistUser() {
             this.axios.post(this.COMMON.apiUrl + "/v1/api/user/create", this.user).then(function (res) {
                 if (res.data.code == 200) {
-                    Snackbar.show({ pos: 'top-center', text: '注册成功！', showAction: false });
+                    this.COMMON.ShowMsg('注册成功！')
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    this.COMMON.ShowMsg(res.data.msg)
                 }
             });
         },
@@ -84,12 +83,12 @@ export default {
                 if (res.data.code == 200) {
                     that.$cookies.set('Authorization', res.data.data, 60 * 60 * 24 * 7);
                     that.$cookies.set('UserId', res.data.user.user_id, 60 * 60 * 24 * 7);
-                    Snackbar.show({ pos: 'top-center', text: '登录成功！', showAction: false });
+                    that.COMMON.ShowMsg('登录成功！')
                     setTimeout(function () {
                         that.$emit('is-login');
                     }, 2000)
                 } else {
-                    Snackbar.show({ pos: 'top-center', text: res.data.msg, showAction: false });
+                    that.COMMON.ShowMsg(res.data.msg)
                 }
             });
         },
@@ -168,7 +167,7 @@ export default {
 .container .top .header .title {
     position: relative;
     top: 2px;
-    color: rgba(0, 0, 0, .85);
+    color:white;
     font-weight: 600;
     font-size: 33px;
     font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
@@ -204,7 +203,7 @@ export default {
     margin-right: 5px;
 }
 
-.icon i{
+.icon i {
     font-size: 26px;
     color: red;
 }
