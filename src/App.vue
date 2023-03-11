@@ -29,9 +29,14 @@
                                             <i class='bx bx-search'></i>
                                         </template>
                                     </n-button>
-                                    <n-avatar @click="LoginOut()" circle size="medium"
-                                        src="https://wework.qpic.cn/wwpic/622138_d-QTzJ_oQAyVDjO_1656146831/0">
-                                    </n-avatar>
+
+                                    <n-dropdown trigger="hover" placement="bottom-start" :options="options"
+                                        @select="handleSelect">
+                                        <n-avatar circle size="medium"
+                                            src="https://wework.qpic.cn/wwpic/622138_d-QTzJ_oQAyVDjO_1656146831/0">
+
+                                        </n-avatar>
+                                    </n-dropdown>
                                 </n-space>
                             </div>
                         </n-layout-header>
@@ -289,7 +294,7 @@ export default defineComponent({
                     if (res.data.code == 200) {
                         login.value = true;
                         is_admin.value = res.data.data.is_admin;
-                        proxy.$cookies.set('is_admin', is_admin.value, 60 * 60 * 24 * 7)
+                        proxy.$cookies.set('is_admin', is_admin.value, 60 * 60 * 24 * 7);
                         getConfig();
                     } else {
                         proxy.COMMON.ShowMsg(res.data.msg)
@@ -328,7 +333,23 @@ export default defineComponent({
             showSaerch,
             q: ref(null),
             reF,
-            reFApp
+            reFApp,
+            options: [
+                {
+                    label: '注销登录',
+                    key: "out"
+                },
+            ],
+            handleSelect(key) {
+                if (key == "out") {
+                    proxy.$cookies.remove("Authorization");
+                    proxy.$cookies.remove("is_admin");
+                    proxy.COMMON.ShowMsg("注销登录成功！")
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1000)
+                }
+            },
         }
     },
     methods: {
@@ -372,6 +393,7 @@ export default defineComponent({
         },
         LoginOut() {
             this.$cookies.remove("Authorization");
+            this.$cookies.remove("is_admin");
             this.login = false;
         },
         RefAppData() {

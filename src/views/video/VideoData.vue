@@ -69,7 +69,7 @@
                                         <i class='bx bxs-trash-alt'></i>
                                     </span>
                                 </button>
-                                <n-dropdown v-show="is_admin" trigger="hover" size="large" :options="options"
+                                <n-dropdown v-if="is_admin" trigger="hover" size="large" :options="options"
                                     @select="handleSelect">
                                     <button class="detailButton circleButton">
                                         <span class="button-icon">
@@ -385,7 +385,7 @@ export default {
                     form.value.data_type = gallery_type.value;
                     form.value.data_id = data.value.id;
                     backImg.value = proxy.COMMON.imgUrl + "/t/p/w1920_and_h1080_bestv2" + data.value.backdrop_path
-                    if (gallery_type.value == "tv" && is_admin.value) {
+                    if (gallery_type.value == "tv") {
                         fetchSeason();
                     } else {
                         file.value = data.value.url.replaceAll("/d/", "/");
