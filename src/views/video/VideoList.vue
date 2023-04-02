@@ -150,13 +150,17 @@ export default {
         gallery_type.value = proxy.$route.query.gallery_type;
         size.value = 48;
         page.value = 1;
+
         const per_card = ref(8);
         if (proxy.COMMON.isMo) {
             per_card.value = 3;
         }
         const pageText = ref(null);
 
-
+        let page_str = localStorage.getItem("page")
+        if (page_str != null) {
+            page.value = parseInt(page_str);
+        }
         function init(gallery_uid) {
             let sider_items = document.querySelectorAll(".sider-item a");
             sider_items.forEach(event => {
@@ -175,6 +179,7 @@ export default {
             if (num.value < size.value) {
                 si = num.value;
             }
+            localStorage.setItem("page", page.value);
             pageText.value = num.value + " 的 " + (page.value - 1) * size.value + "-" + ((page.value - 1) * size.value + si);
         }
 

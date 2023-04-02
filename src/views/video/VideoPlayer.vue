@@ -567,8 +567,6 @@ export default {
             art = data;
             art.on('restart', () => {
                 url.value = encodeURI(art.url);
-                console.log(url.value)
-                console.log("切换链接")
             });
         }
         onBeforeRouteUpdate((to, from) => {

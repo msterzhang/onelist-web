@@ -176,7 +176,7 @@ export default {
 .container .top .desc {
     margin-top: 12px;
     margin-bottom: 40px;
-    color: rgba(0, 0, 0, .45);
+    color: white;
     font-size: 14px;
 }
 
