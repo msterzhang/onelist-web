@@ -314,6 +314,7 @@ export default {
                     this.COMMON.ShowMsg(res.data.msg)
                 }
                 this.show = false;
+                this.showModal = !this.showModal;
             }).catch((error) => {
                 this.COMMON.ShowMsg(error);
                 this.show = false;
@@ -357,7 +358,6 @@ export default {
     min-height: 60px;
     margin-bottom: 12px;
 }
-
 
 .content-header-title {
     font-size: 1.4em;
