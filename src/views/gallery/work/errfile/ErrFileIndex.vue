@@ -54,6 +54,9 @@
                 <template #footer>
                     <n-space justify="end" size="medium">
                         <n-button @click="reF()" type="info">
+                            <template #icon>
+                                <i class='bx bx-check'></i>
+                            </template>
                             确定
                         </n-button>
                     </n-space>

@@ -241,6 +241,9 @@
                 <template #footer>
                     <n-space justify="end" size="medium">
                         <n-button @click="SearchVideo()" type="info">
+                            <template #icon>
+                                <i class='bx bx-check'></i>
+                            </template>
                             搜索
                         </n-button>
                     </n-space>

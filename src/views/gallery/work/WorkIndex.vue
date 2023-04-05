@@ -156,9 +156,15 @@
                     </n-button>
                 </template>
                 <h3>确定重新刮削此挂载目录吗？</h3>
+                <n-form-item label="是否全部重新刮削(默认只刮削挂载目录中新增文件)?">
+                    <n-switch size="large" v-model:value="allFile" placeholder="" clearable />
+                </n-form-item>
                 <template #footer>
                     <n-space justify="end" size="medium">
                         <n-button @click="ReNewWork()" type="info">
+                            <template #icon>
+                                <i class='bx bx-check'></i>
+                            </template>
                             确定
                         </n-button>
                     </n-space>
@@ -175,6 +181,7 @@ export default {
     setup() {
         const loading = ref(true);
         const show = ref(false);
+        const allFile = ref(false);
         const showModal = ref(false);
         const updateModal = ref(false);
         const renewModal = ref(false);
@@ -224,6 +231,7 @@ export default {
             fetchData();
         });
         return {
+            allFile,
             data,
             error,
             message,
@@ -273,8 +281,12 @@ export default {
             this.work = work;
             this.renewModal = !this.renewModal;
         },
-        ReNewWork(work) {
-            this.Request(this.COMMON.apiUrl + '/v1/api/work/renew?id=' + this.work.id, {})
+        ReNewWork() {
+            let mod = "new";
+            if (this.allFile) {
+                mod = "all";
+            }
+            this.Request(this.COMMON.apiUrl + '/v1/api/work/renew?id=' + this.work.id + "&mod=" + mod, {})
         },
         Request(api, data) {
             this.axios.post(api, data, {

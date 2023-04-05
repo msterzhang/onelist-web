@@ -228,15 +228,18 @@
                 <template #footer>
                     <n-space justify="end" size="medium">
                         <n-button @click="deleteModal = !deleteModal" type="info">
+                            <i class='bx bx-x'></i>
                             取消
                         </n-button>
                         <n-button @click="DeleteVideo()" type="warning">
+                            <i class='bx bx-check'></i>
                             确定
                         </n-button>
                     </n-space>
                 </template>
             </n-card>
         </n-modal>
+
         <n-modal transform-origin="center" v-model:show="scrapeModal">
             <n-card style="width: 600px" title="重新刮削" :bordered="false" size="huge" role="dialog" aria-modal="true">
                 <template #header-extra>
@@ -288,13 +291,38 @@
                 <template #footer>
                     <n-space justify="end" size="medium">
                         <n-button @click="SearchVideo()" type="info">
+                            <template #icon>
+                                  <i class='bx bx-check'></i>
+                            </template>
                             搜索
                         </n-button>
                     </n-space>
                 </template>
             </n-card>
         </n-modal>
-
+        <n-modal transform-origin="center" v-model:show="titleModal">
+            <n-card style="width: 600px" title="修改资源" :bordered="false" size="huge" role="dialog" aria-modal="true">
+                <template #header-extra>
+                    <n-button @click="titleModal = !titleModal" strong secondary circle>
+                        <i class='bx bx-x'></i>
+                    </n-button>
+                </template>
+                <n-form-item label="标题">
+                    <n-input @keyup.enter="UpdateVideo()" v-model:value="title" type="text" size="large" placeholder="">
+                    </n-input>
+                </n-form-item>
+                <template #footer>
+                    <n-space justify="end" size="medium">
+                        <n-button @click="UpdateVideo()" type="info">
+                            <template #icon>
+                                <i class='bx bx-save'></i>
+                            </template>
+                            确定
+                        </n-button>
+                    </n-space>
+                </template>
+            </n-card>
+        </n-modal>
     </div>
 </template>
 <script>
@@ -329,6 +357,8 @@ export default {
         const seasonId = ref(null);
         const tvPath = ref(null);
         const file = ref(null);
+        const title = ref(null);
+        const titleModal = ref(false);
         const form = ref({
             "data_type": "",
             "data_id": ""
@@ -415,6 +445,8 @@ export default {
 
         return {
             id,
+            title,
+            titleModal,
             tvId,
             show,
             tvPath,
@@ -445,12 +477,23 @@ export default {
                     label: "重新刮削",
                     key: "scrape"
                 },
+                {
+                    label: "修改标题",
+                    key: "title"
+                },
             ],
             handleSelect(key) {
                 if (key == "edit") {
                     updateModal.value = true;
                 } else if (key == "scrape") {
                     scrapeModal.value = true;
+                } else if (key == "title") {
+                     if (gallery_type.value == "tv") {
+                         title.value = data.value.name;
+                    } else {
+                         title.value = data.value.title;
+                    }
+                    titleModal.value = true;
                 }
             }
         }
@@ -520,6 +563,29 @@ export default {
                             path: "/",
                         })
                     }, 1000);
+                } else {
+                    this.COMMON.ShowMsg(res.data.msg)
+                }
+            }).catch((error) => {
+                this.COMMON.ShowMsg(error);
+            });
+        },
+        UpdateVideo() {
+            let api = this.COMMON.apiUrl + '/v1/api/themovie/update?id=' + this.data.id;
+            this.data.title = this.title;
+            if (this.gallery_type == "tv") {
+                api = this.COMMON.apiUrl + '/v1/api/thetv/update?id=' + this.data.id;
+                this.data.name = this.title;
+            }
+            this.axios.post(api, this.data, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': this.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    this.titleModal = !this.titleModal;
+                    this.COMMON.ShowMsg(res.data.msg)
                 } else {
                     this.COMMON.ShowMsg(res.data.msg)
                 }

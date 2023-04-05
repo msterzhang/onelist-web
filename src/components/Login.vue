@@ -64,11 +64,12 @@ export default {
     },
     methods: {
         RegistUser() {
+            let that = this;
             this.axios.post(this.COMMON.apiUrl + "/v1/api/user/create", this.user).then(function (res) {
                 if (res.data.code == 200) {
-                    this.COMMON.ShowMsg('注册成功！')
+                    that.COMMON.ShowMsg('注册成功！')
                 } else {
-                    this.COMMON.ShowMsg(res.data.msg)
+                    that.COMMON.ShowMsg(res.data.msg)
                 }
             });
         },
