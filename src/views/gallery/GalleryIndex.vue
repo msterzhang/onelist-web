@@ -219,8 +219,11 @@
                                         :src='"https://image.tmdb.org/t/p/w220_and_h330_face/" + item.poster_path'>
                                 </div>
                                 <div class="search-content">
-                                    <div class="search-title">
+                                    <div v-if="item.name.length != 0" class="search-title">
                                         {{ item.name }}
+                                    </div>
+                                    <div v-else class="search-title">
+                                        {{ item.title }}
                                     </div>
                                     <div class="search-id">
                                         ID:{{ item.id }}
