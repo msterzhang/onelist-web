@@ -546,7 +546,7 @@ export default {
                     if (res.data.data.length > 0) {
                         alist_host.value = res.data.data;
                     } else {
-                        alist_host.value = proxy.COMMON.apiUrl + "/file/";
+                        alist_host.value = process.env.NODE_ENV === 'production'?window.location.origin: proxy.COMMON.apiUrl + "/file/";
                     }
                     if (gallery_type.value == "movie") {
                         url.value = alist_host.value + data.value.url;
