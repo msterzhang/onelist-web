@@ -322,6 +322,7 @@ export default {
                 if (res.data.code == 200) {
                     this.COMMON.ShowMsg(res.data.msg)
                     this.reF();
+                     this.showModal = !this.showModal;
                 } else {
                     this.COMMON.ShowMsg(res.data.msg)
                 }
