@@ -117,7 +117,7 @@ export default {
 
 
         function fetchData() {
-            let api = proxy.COMMON.apiUrl + `/v1/api/star/data/list?data_type=${data_type.value}&?page=${page.value}&size=${size.value}`;
+            let api = proxy.COMMON.apiUrl + `/v1/api/star/data/list?data_type=${data_type.value}&page=${page.value}&size=${size.value}`;
             proxy.axios.post(api, {}, {
                 headers: {
                     'content-type': 'application/json',
@@ -187,6 +187,14 @@ export default {
         }
     },
     methods: {
+       BackPage() {
+            this.page = this.page - 1;
+            if (this.page <= 0) {
+                this.COMMON.ShowMsg("已经是第1页啦!")
+                this.page = 1;
+            }
+            this.reF();
+        },
         NextPage() {
             this.page = this.page + 1;
             this.reF();

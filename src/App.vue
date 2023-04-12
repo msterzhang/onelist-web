@@ -301,7 +301,6 @@ export default defineComponent({
                     }
                 }).catch((error) => {
                     proxy.COMMON.ShowMsg("登录已过期,请重新登录!")
-                    console.log(error)
                     load.value = false;
                 });
             } else {
