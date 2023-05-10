@@ -161,7 +161,6 @@
                         </div>
                     </n-scrollbar>
                 </div>
-
                 <div class="showContainer">
                     <div class="show-header">
                         <div class="show-title">

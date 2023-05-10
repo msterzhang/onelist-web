@@ -8,10 +8,8 @@ import router from './router'
 
 import global from './components/common.vue'
 
-
 import "node-snackbar/dist/snackbar.min.css"
 import 'boxicons/css/boxicons.min.css'
-
 
 const app = createApp(App);
 

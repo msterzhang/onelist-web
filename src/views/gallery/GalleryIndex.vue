@@ -99,6 +99,9 @@
                     <n-form-item label="是否为alist,如果是则需要输入相关信息，用于刮削文件?">
                         <n-switch size="large" v-model:value="gallery.is_alist" placeholder="" clearable />
                     </n-form-item>
+                    <n-form-item label="是否为阿里云open,如果是则支持多清晰度及多字幕切换">
+                        <n-switch size="large" v-model:value="gallery.is_ali_open" placeholder="" clearable />
+                    </n-form-item>
                     <n-form-item v-show="gallery.is_alist" label="域名">
                         <n-input size="large" v-model:value="gallery.alist_host" placeholder="" clearable />
                     </n-form-item>
@@ -283,6 +286,7 @@ export default {
             "title": "",
             "gallery_type": "",
             "is_tv": true,
+            "is_ali_open":false,
             "gallery_uid": "",
             "image": "",
             "is_alist": false,
@@ -299,7 +303,7 @@ export default {
         })
 
         function fetchData() {
-            proxy.axios.post(proxy.COMMON.apiUrl + '/v1/api/gallery/list?page=' + page.value + '&size=' + size.value, {}, {
+            proxy.axios.post(proxy.COMMON.apiUrl + '/v1/api/gallery/admin/list?page=' + page.value + '&size=' + size.value, {}, {
                 headers: {
                     'content-type': 'application/json',
                     'Authorization': proxy.$cookies.get("Authorization")
@@ -410,11 +414,11 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
+                    this.showModal = false;
+                    this.updateModal = false;
                     this.$emit("refApp");
                     this.COMMON.ShowMsg(res.data.msg)
                     this.reF();
-                    this.showModal = false;
-                    this.updateModal = false;
                 } else {
                     this.COMMON.ShowMsg(res.data.msg)
                 }

@@ -209,7 +209,7 @@
                 </template>
                 <ul class="play-list">
                     <li class="play-item">
-                        <a :href="'iina://weblink/?url=' + url" target="_blank">
+                        <a :href="'iina://weblink/?url=' + urlBase" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/iina.webp" alt="">
@@ -219,7 +219,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'potplayer://' + url" target="_blank">
+                        <a :href="'potplayer://' + urlBase" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/potplayer.webp" alt="">
@@ -229,7 +229,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'vlc://' + url" target="_blank">
+                        <a :href="'vlc://' + urlBase" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/vlc.webp" alt="">
@@ -239,7 +239,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'nplayer-' + url" target="_blank">
+                        <a :href="'nplayer-' + urlBase" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/nplayer.webp" alt="">
@@ -249,7 +249,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'infuse://x-callback-url/play?url=' + url" target="_blank">
+                        <a :href="'infuse://x-callback-url/play?url=' + urlBase" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/infuse.webp" alt="">
@@ -259,7 +259,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'intent:' + url" target="_blank">
+                        <a :href="'intent:' + urlBase" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/mxplayer.webp" alt="">
@@ -269,7 +269,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'intent:' + url" target="_blank">
+                        <a :href="'intent:' + urlBase" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/mxplayer-pro.webp" alt="">
@@ -297,6 +297,7 @@ export default {
     },
     setup() {
         const loading = ref(true);
+        const is_ali_open = ref(false);
         const showModal = ref(false);
         const speed = ref(0);
         const urlList = ref([]);
@@ -308,6 +309,7 @@ export default {
         let art = null;
         const id = ref(null);
         const url = ref(null);
+        const urlBase = ref(null);
         const alist_host = ref(null);
         const gallery_type = ref(null);
         const siderRef = ref(null);
@@ -331,7 +333,11 @@ export default {
 
         //选集
         function selectList() {
-            url.value = alist_host.value + season.value.episodes[speed.value].url
+            if (!is_ali_open.value) {
+                setting.value.id = season.value.episodes[speed.value].url;
+                url.value = alist_host.value + season.value.episodes[speed.value].url;
+                urlBase.value = url.value;
+            }
             let selectList = {
                 html: '选集',
                 width: 200,
@@ -340,10 +346,17 @@ export default {
                 onSelect: function (item, $dom, event) {
                     localStorage.setItem(`${id.value}_${gallery_type.value}`, item.speed);
                     document.title = gallery_type.value == "tv" ? `${data.value.name}第${item.speed + 1}集` : data.value.title
-                    art.switchUrl(item.url, item.html);
-                    art.on('ready', () => {
-                        art.play();
-                    });
+                    if (is_ali_open.value) {
+                        urlBase.value = alist_host.value + item.url
+                        OpenVideo(item.url);
+                    } else {
+                        urlBase.value = item.url;
+                        art.switchUrl(item.url, item.html);
+                        art.option.id = item.url.replaceAll(alist_host.value, "");
+                        art.on('ready', () => {
+                            art.play();
+                        });
+                    }
                     return item.html;
                 },
             };
@@ -352,14 +365,151 @@ export default {
                 let item = {
                     default: speed.value == i ? true : false,
                     html: episode.episode_number + "." + episode.name,
-                    url: alist_host.value + episode.url,
+                    url: is_ali_open.value ? episode.url : alist_host.value + episode.url,
                     speed: i,
                 };
                 urlList.value.push(item)
                 selectList.selector.push(item);
             }
             setting.value.settings.push(selectList);
+            if (is_ali_open.value) {
+                OpenVideo(season.value.episodes[speed.value].url);
+            } else {
+                loading.value = false;
+            }
         }
+
+        // 多字幕应用于阿里云open
+        function CreateSubtitle(live_transcoding_subtitle_task_list) {
+            let subtitle = {
+                name: "Subtitle",
+                html: '字幕',
+                width: 250,
+                tooltip: '字幕',
+                selector: [],
+                onSelect: function (item, $dom, event) {
+                    console.info(item, $dom, event);
+                    art.subtitle.url = item.url;
+                    return item.html;
+                },
+            };
+            for (let i = 0; i < live_transcoding_subtitle_task_list.length; i++) {
+                let selector = {
+                    default: live_transcoding_subtitle_task_list[i].language == "chi" ? true : false,
+                    html: `<span style="color:red">${live_transcoding_subtitle_task_list[i].language}</span>`,
+                    url: live_transcoding_subtitle_task_list[i].url,
+
+                }
+                subtitle.selector.push(selector);
+            }
+            if (art != null) {
+                art.setting.update(subtitle);
+            } else {
+                setting.value.settings.push(subtitle);
+            }
+
+        }
+
+        //获取多清晰度
+        function CreateQuality(body, file) {
+            let video_preview_play_info = body.data.video_preview_play_info;
+            let live_transcoding_task_list = video_preview_play_info.live_transcoding_task_list;
+            let live_transcoding_subtitle_task_list = video_preview_play_info.live_transcoding_subtitle_task_list;
+            let quality = {
+                name: "Quality",
+                html: '清晰度',
+                width: 150,
+                tooltip: '清晰度',
+                selector: [],
+                onSelect: function (item, $dom, event) {
+                    console.info(item, $dom, event);
+                    art.switchQuality(item.url, item.html);
+                    return item.html;
+                },
+            };
+            for (let i = 0; i < live_transcoding_task_list.length; i++) {
+                let selector = {
+                    default: i == live_transcoding_task_list.length - 1 ? true : false,
+                    html: live_transcoding_task_list[i].template_height + "P",
+                    url: live_transcoding_task_list[i].url,
+                }
+                quality.selector.push(selector);
+                // setting.value.quality.push(selector);
+            }
+            setting.value.settings.push(quality);
+            if (live_transcoding_subtitle_task_list != null) {
+                CreateSubtitle(live_transcoding_subtitle_task_list);
+            }
+            url.value = live_transcoding_task_list[live_transcoding_task_list.length - 1].url;
+            setting.value.id = alist_host.value + file;
+            loading.value = false;
+        }
+
+        //更新多清晰度
+        function UpdateQuality(body, file) {
+            let video_preview_play_info = body.data.video_preview_play_info;
+            let live_transcoding_task_list = video_preview_play_info.live_transcoding_task_list;
+            let live_transcoding_subtitle_task_list = video_preview_play_info.live_transcoding_subtitle_task_list;
+            let qualityList = [];
+            let quality = {
+                name: "Quality",
+                html: '清晰度',
+                width: 150,
+                tooltip: '清晰度',
+                selector: [],
+                onSelect: function (item, $dom, event) {
+                    art.switchQuality(item.url, item.html);
+                    return item.html;
+                },
+            };
+            for (let i = 0; i < live_transcoding_task_list.length; i++) {
+                let selector = {
+                    default: i == live_transcoding_task_list.length - 1 ? true : false,
+                    html: live_transcoding_task_list[i].template_height + "P",
+                    url: live_transcoding_task_list[i].url,
+                }
+                quality.selector.push(selector);
+                qualityList.push(selector);
+            }
+            if (live_transcoding_subtitle_task_list != null) {
+                CreateSubtitle(live_transcoding_subtitle_task_list);
+            }
+            url.value = live_transcoding_task_list[live_transcoding_task_list.length - 1].url;
+            art.option.id = file;
+            setting.value.id = file;
+            art.setting.update(quality);
+            art.switchUrl(url.value, "");
+            // art.controls.update(qualityList)
+        }
+
+        // 阿里云盘open
+        function OpenVideo(file) {
+            let api = `${proxy.COMMON.apiUrl}/v1/api/aliopen/video`;
+            let form = {
+                "file": file,
+                "gallery_uid": data.value.gallery_uid
+            };
+            proxy.axios.post(api, form, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': proxy.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (res.data.code == 200) {
+                    urlBase.value = alist_host.value + file;
+                    if (art == null) {
+                        CreateQuality(res.data, file);
+                    } else {
+                        UpdateQuality(res.data, file);
+                    }
+                } else {
+                    proxy.COMMON.ShowMsg(res.data.msg)
+                }
+            }).catch((error) => {
+                proxy.COMMON.ShowMsg(error);
+            });
+        }
+
 
         // 下一集按钮，还不能和选集面板联动，暂时不用
         function initArtTv() {
@@ -387,6 +537,7 @@ export default {
         function initArt() {
             setting.value = {
                 url: "",
+                id: "",
                 customType: {
                     m3u8: function (video, url) {
                         var hls = new Hls()
@@ -437,27 +588,27 @@ export default {
                 },
                 settings: [],
                 controls: [
-                    {
-                        position: 'right',
-                        index: 15,
-                        html: '<img width="18" heigth="18" src="./images/download.svg">',
-                        tooltip: '下载视频',
-                        style: {
-                            color: 'red',
-                        },
-                        click: function () {
-                            const a = document.createElement('a');
-                            a.setAttribute('href', url.value);
-                            a.setAttribute('target', "_blank");
-                            a.setAttribute('download', "001.mp4");
-                            a.click();
-                        },
-                    }
+                    // {
+                    //     position: 'right',
+                    //     index: 15,
+                    //     html: '<img width="18" heigth="18" src="./images/download.svg">',
+                    //     tooltip: '下载视频',
+                    //     style: {
+                    //         color: 'red',
+                    //     },
+                    //     click: function () {
+                    //         const a = document.createElement('a');
+                    //         a.setAttribute('href', url.value);
+                    //         a.setAttribute('target', "_blank");
+                    //         a.setAttribute('download', "001.mp4");
+                    //         a.click();
+                    //     },
+                    // }
                 ],
-
+                quality: [],
                 icons: {
-                    loading: '<img width="80" heigth="80" src="./images/loading.gif">',
-                    state: '<img width="200" heigth="200" src="./images/play.svg">',
+                    loading: '<img width="60" heigth="60" src="./images/loading.gif">',
+                    state: '<img width="60" heigth="60" src="./images/play2.svg">',
                     indicator: '<img width="16" heigth="16" src="./images/indicator.svg">',
                 },
                 plugins: [
@@ -525,7 +676,6 @@ export default {
                 if (res.data.code == 200) {
                     season.value = res.data.data;
                     selectList();
-                    loading.value = false;
                 } else {
                     proxy.COMMON.ShowMsg(res.data.msg)
                 }
@@ -546,15 +696,22 @@ export default {
                     if (res.data.data.length > 0) {
                         alist_host.value = res.data.data;
                     } else {
-                        alist_host.value = process.env.NODE_ENV === 'production'?window.location.origin + "/file/" : proxy.COMMON.apiUrl + "/file/";
+                        alist_host.value = process.env.NODE_ENV === 'production' ? window.location.origin + "/file/" : proxy.COMMON.apiUrl + "/file/";
                     }
+                    is_ali_open.value = res.data.is_ali_open;
                     if (gallery_type.value == "movie") {
-                        url.value = alist_host.value + data.value.url;
-                        loading.value = false;
+                        if (is_ali_open.value) {
+                            OpenVideo(data.value.url);
+                        } else {
+                            url.value = alist_host.value + data.value.url;
+                            setting.value.id = data.value.url;
+                            urlBase.value = url.value;
+                            loading.value = false;
+                        }
+
                     } else {
                         fetchSeason();
                     }
-
                 } else {
                     proxy.COMMON.ShowMsg(res.data.msg)
                 }
@@ -569,6 +726,7 @@ export default {
                 url.value = encodeURI(art.url);
             });
         }
+
         onBeforeRouteUpdate((to, from) => {
             id.value = to.query.id;
             gallery_type.value = to.query.gallery_type;
@@ -582,6 +740,7 @@ export default {
         onBeforeRouteLeave((to, from) => {
             document.title = proxy.COMMON.title;
         });
+
         onMounted(() => {
             initArt();
             fetchData();
@@ -593,6 +752,7 @@ export default {
             id,
             data,
             like,
+            urlBase,
             artF,
             error,
             setting,
@@ -610,7 +770,7 @@ export default {
             this.artF(art);
             this.art = art;
             this.art.url = this.url
-            console.info(this.art)
+            //console.info(this.art)
         },
         PlayEpisod(speed) {
             this.$router.push({
@@ -811,6 +971,12 @@ h1 {
 img.play-icon {
     width: 60px;
     height: 60px;
+}
+
+.art-video-player .art-mask .art-state {
+    position: absolute;
+    bottom: 65px;
+    right: 30px;
 }
 
 @media (max-width: 767px) {
