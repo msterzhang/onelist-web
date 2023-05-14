@@ -55,7 +55,7 @@ export default {
         },
         content: {
             type: String,
-            default: "一个类似emby的专注于刮削alist聚合网盘形成影视媒体库的程序。",
+            default: "",
         },
         login: {
             type: Boolean,

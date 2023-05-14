@@ -142,7 +142,7 @@
                             <div class="episode-card-item" v-for="(item, index) in season.episodes" :key="index">
                                 <div class="episode-img">
                                     <img v-if="item.still_path.length > 0" loading="lazy"
-                                        :src='COMMON.imgUrl + "/t/p/w227_and_h127_bestv2" + item.still_path' alt="">
+                                        :src='COMMON.imgUrl + "/t/p/w710_and_h400_multi_faces" + item.still_path' alt="">
                                     <img v-else loading="lazy" src="/images/not_img.png" alt="">
                                 </div>
                                 <div class="episode-content">
@@ -297,6 +297,7 @@ export default {
     },
     setup() {
         const loading = ref(true);
+        const rootSubtitle = ref(null);
         const is_ali_open = ref(false);
         const showModal = ref(false);
         const speed = ref(0);
@@ -337,6 +338,7 @@ export default {
                 setting.value.id = season.value.episodes[speed.value].url;
                 url.value = alist_host.value + season.value.episodes[speed.value].url;
                 urlBase.value = url.value;
+                chunkSubtitles(season.value.episodes[speed.value].url);
             }
             let selectList = {
                 html: '选集',
@@ -355,6 +357,7 @@ export default {
                         art.option.id = item.url.replaceAll(alist_host.value, "");
                         art.on('ready', () => {
                             art.play();
+                            chunkSubtitles(item.url.replaceAll(alist_host.value, ""));
                         });
                     }
                     return item.html;
@@ -386,19 +389,30 @@ export default {
                 html: '字幕',
                 width: 250,
                 tooltip: '字幕',
-                selector: [],
+                selector: [
+                    {
+                        html: '开启字幕',
+                        tooltip: '是',
+                        switch: true,
+                        onSwitch: function (item) {
+                            item.tooltip = item.switch ? '否' : '是';
+                            art.subtitle.show = !item.switch;
+                            return !item.switch;
+                        },
+                    },
+                ],
                 onSelect: function (item, $dom, event) {
-                    console.info(item, $dom, event);
                     art.subtitle.url = item.url;
+                    rootSubtitle.value = item.url;
                     return item.html;
                 },
             };
+
             for (let i = 0; i < live_transcoding_subtitle_task_list.length; i++) {
                 let selector = {
                     default: live_transcoding_subtitle_task_list[i].language == "chi" ? true : false,
                     html: `<span style="color:red">${live_transcoding_subtitle_task_list[i].language}</span>`,
                     url: live_transcoding_subtitle_task_list[i].url,
-
                 }
                 subtitle.selector.push(selector);
             }
@@ -407,7 +421,6 @@ export default {
             } else {
                 setting.value.settings.push(subtitle);
             }
-
         }
 
         //获取多清晰度
@@ -422,8 +435,11 @@ export default {
                 tooltip: '清晰度',
                 selector: [],
                 onSelect: function (item, $dom, event) {
-                    console.info(item, $dom, event);
+                    // console.info(item, $dom, event);
                     art.switchQuality(item.url, item.html);
+                    setTimeout(function () {
+                        art.subtitle.url = rootSubtitle.value;
+                    }, 4000)
                     return item.html;
                 },
             };
@@ -434,15 +450,34 @@ export default {
                     url: live_transcoding_task_list[i].url,
                 }
                 quality.selector.push(selector);
-                // setting.value.quality.push(selector);
+                setting.value.quality.push(selector);
             }
             setting.value.settings.push(quality);
+
             if (live_transcoding_subtitle_task_list != null) {
                 CreateSubtitle(live_transcoding_subtitle_task_list);
             }
             url.value = live_transcoding_task_list[live_transcoding_task_list.length - 1].url;
+
             setting.value.id = alist_host.value + file;
             loading.value = false;
+            setTimeout(function () {
+                if (live_transcoding_subtitle_task_list != null) {
+                    let subtitleUrl = live_transcoding_subtitle_task_list[0].url;
+                    for (let i = 0; i < live_transcoding_subtitle_task_list.length; i++) {
+                        if (live_transcoding_subtitle_task_list[i].language == "chi") {
+                            subtitleUrl = live_transcoding_subtitle_task_list[i].url;
+                        }
+                    }
+                    if (art != null) {
+                        art.subtitle.url = subtitleUrl;
+                        rootSubtitle.value = subtitleUrl;
+                        WatchArtSubtitle();
+                    }
+                } else {
+                    chunkSubtitles(file);
+                }
+            }, 5000)
         }
 
         //更新多清晰度
@@ -459,6 +494,9 @@ export default {
                 selector: [],
                 onSelect: function (item, $dom, event) {
                     art.switchQuality(item.url, item.html);
+                    setTimeout(function () {
+                        art.subtitle.url = rootSubtitle.value;
+                    }, 4000)
                     return item.html;
                 },
             };
@@ -479,7 +517,88 @@ export default {
             setting.value.id = file;
             art.setting.update(quality);
             art.switchUrl(url.value, "");
-            // art.controls.update(qualityList)
+            art.quality = qualityList;
+            if (live_transcoding_subtitle_task_list != null) {
+                let subtitleUrl = live_transcoding_subtitle_task_list[0].url;
+                art.subtitle.url = subtitleUrl;
+                rootSubtitle.value = subtitleUrl;
+
+            } else {
+                chunkSubtitles(file);
+            }
+        }
+
+        function chunkSubtitles(file) {
+            let subtitles = ["srt", "ass", "ssa", "SRT", "ASS", "SSA"]
+            Promise.all(
+                subtitles.map(async (subtitleType) => {
+                    await chunkSubtitle(file, subtitleType)
+                })
+            ).then(() => {
+                WatchArtSubtitle()
+            })
+        }
+
+        // srt，ass，ssa
+        function chunkSubtitle(file, subtitleType) {
+            let subtitlePath = alist_host.value + file.replaceAll(file.split('.').pop(), subtitleType);
+            proxy.axios.get(subtitlePath, {
+                headers: {
+                    'content-type': 'application/json',
+                    'Authorization': proxy.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                if (!res.data.code) {
+                    art.subtitle.url = subtitlePath;
+                    rootSubtitle.value = subtitlePath;
+                    let subtitle = {
+                        name: "Subtitle",
+                        html: '字幕',
+                        width: 250,
+                        tooltip: '字幕',
+                        selector: [
+                            {
+                                html: '开启字幕',
+                                tooltip: '是',
+                                switch: true,
+                                onSwitch: function (item) {
+                                    item.tooltip = item.switch ? '否' : '是';
+                                    art.subtitle.show = !item.switch;
+                                    return !item.switch;
+                                },
+                            },
+                        ],
+                        onSelect: function (item, $dom, event) {
+                            art.subtitle.url = item.url;
+                            rootSubtitle.value = item.url;
+                            return item.html;
+                        },
+                    };
+                    let selector = {
+                        default: true,
+                        html: `<span style="color:red">外挂字幕</span>`,
+                        url: subtitlePath,
+                    }
+                    subtitle.selector.push(selector);
+                    art.setting.update(subtitle);
+                    return true;
+                }
+                return false;
+            }).catch((error) => {
+                proxy.COMMON.ShowMsg(error);
+                return false;
+            });
+        }
+        //监控清晰度切换，重载字幕
+        function WatchArtSubtitle() {
+            setTimeout(
+                function () {
+                    art.on('restart', (url) => {
+                        art.subtitle.url = rootSubtitle.value;
+                    });
+                }, 4000
+            )
+
         }
 
         // 阿里云盘open
@@ -706,6 +825,7 @@ export default {
                             url.value = alist_host.value + data.value.url;
                             setting.value.id = data.value.url;
                             urlBase.value = url.value;
+                            chunkSubtitles(data.value.url);
                             loading.value = false;
                         }
 
@@ -945,6 +1065,7 @@ h1 {
     width: 100%;
     max-width: 400px;
     min-width: 200px;
+    max-height: 120px;
     aspect-ratio: 12/9;
 }
 

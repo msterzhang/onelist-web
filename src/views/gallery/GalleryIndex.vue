@@ -152,6 +152,9 @@
                     <n-form-item label="是否为alist,如果是则需要输入以下相关信息，用于刮削文件?">
                         <n-switch size="large" v-model:value="gallery.is_alist" placeholder="" clearable />
                     </n-form-item>
+                    <n-form-item label="是否为阿里云open,如果是则支持多清晰度及多字幕切换">
+                        <n-switch size="large" v-model:value="gallery.is_ali_open" placeholder="" clearable />
+                    </n-form-item>
                     <n-form-item v-show="gallery.is_alist" label="域名">
                         <n-input size="large" v-model:value="gallery.alist_host" placeholder="" clearable />
                     </n-form-item>

@@ -299,6 +299,7 @@ export default {
                     this.COMMON.ShowMsg(res.data.msg)
                     this.showModal = false;
                     this.updateModal = false;
+                    this.renewModal = false;
                     this.reF();
                 } else {
                     this.COMMON.ShowMsg(res.data.msg)

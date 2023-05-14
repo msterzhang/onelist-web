@@ -266,7 +266,7 @@
                         <div class="search-itme" v-for="(item, index) in searchData" :key="index">
                             <div class="search-img">
                                 <img loading="lazy"
-                                    :src='"https://image.tmdb.org/t/p/w220_and_h330_face/" + item.poster_path'>
+                                    :src='"https://tmdb-image-prod.b-cdn.net/t/p/w220_and_h330_face/" + item.poster_path'>
                             </div>
                             <div class="search-content">
                                 <div class="search-title">

@@ -18,7 +18,7 @@
                                 }
                             }">
                                 <img v-if="item.image.length > 0" loading="lazy" class='gallery-img'
-                                    :src='COMMON.imgUrl + "/t/p/w355_and_h200_multi_faces" + item.image'>
+                                    :src='item.image.search(/gallery/) != -1 ? COMMON.apiUrl + item.image : COMMON.imgUrl + "/t/p/w355_and_h200_multi_faces" + item.image'>
                                 <img v-else loading="lazy" class='gallery-img' src='/images/not_gellery.png'>
                                 <div class="view-item-title">
                                     {{ item.title }}

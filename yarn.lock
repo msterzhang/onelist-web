@@ -1978,10 +1978,10 @@ artplayer-plugin-control@^1.0.0:
   resolved "https://registry.npmmirror.com/artplayer-plugin-control/-/artplayer-plugin-control-1.0.0.tgz"
   integrity sha512-LBLCyVuL9UtHFFwDXAPG0vm2snVv82kZKr6+kMSlVxzpaX8Nl5xJEFqFwFz1Pc2EvBR6uP3ytAvyA7WvqAA5cA==
 
-artplayer@^5.0.6:
-  version "5.0.6"
-  resolved "https://registry.npmjs.org/artplayer/-/artplayer-5.0.6.tgz"
-  integrity sha512-GHmtNC/edMtBRQQ74REFL6KsvB1mk/BMh0frsB5eqlVeUEUbUzbgeqVoPH2R1IkoNZVIqQSvMd+sD5IuIKjIUQ==
+artplayer@^5.0.7:
+  version "5.0.7"
+  resolved "https://registry.npmjs.org/artplayer/-/artplayer-5.0.7.tgz"
+  integrity sha512-ma1h7Do8SRHrele5WPuT/DlB5nR7HegPfWG0P/Plg1w4P9PidBxF1G/gSd44e2yC5DaIuV+W9XU7vgxGNkd23g==
   dependencies:
     option-validator "^2.0.6"
 

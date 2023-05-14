@@ -230,12 +230,7 @@ export default defineComponent({
         }
 
         function getConfig() {
-            proxy.axios.post(proxy.COMMON.apiUrl + `/v1/api/config/data`, {}, {
-                headers: {
-                    'content-type': 'application/json',
-                    'Authorization': proxy.$cookies.get("Authorization")
-                }
-            }).then(res => {
+            proxy.axios.get(proxy.COMMON.apiUrl + `/v1/api/configs`).then(res => {
                 if (res.data.code == 200) {
                     let config = res.data.data;
                     localStorage.setItem("title", config.title);
@@ -250,7 +245,7 @@ export default defineComponent({
                         favicon.href = link;
                         document.head.appendChild(favicon);
                     }
-                    getData();
+                    getUserData()
                 } else {
                     proxy.COMMON.ShowMsg(res.data.msg)
                 }
@@ -295,7 +290,7 @@ export default defineComponent({
                         login.value = true;
                         is_admin.value = res.data.data.is_admin;
                         proxy.$cookies.set('is_admin', is_admin.value, 60 * 60 * 24 * 7);
-                        getConfig();
+                        getData();
                     } else {
                         proxy.COMMON.ShowMsg(res.data.msg)
                     }
@@ -308,14 +303,14 @@ export default defineComponent({
             }
         }
         const reF = async () => {
-            getUserData()
+            getConfig()
         };
         const reFApp = async () => {
             getData()
         };
 
         onMounted(() => {
-            getUserData();
+            getConfig();
         });
         return {
             dark,
