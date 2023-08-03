@@ -138,7 +138,7 @@
                 </template>
                 <ul class="play-list">
                     <li class="play-item">
-                        <a :href="'iina://weblink/?url=' + url" target="_blank">
+                        <a :href="'iina://weblink/?url=' + encodeURI(url)" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/iina.webp" alt="">
@@ -148,7 +148,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'potplayer://' + url" target="_blank">
+                        <a :href="'potplayer://' + encodeURI(url)" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/potplayer.webp" alt="">
@@ -158,7 +158,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'vlc://' + url" target="_blank">
+                        <a :href="'vlc://' + encodeURI(url)" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/vlc.webp" alt="">
@@ -168,7 +168,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'nplayer-' + url" target="_blank">
+                        <a :href="'nplayer-' + encodeURI(url)" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/nplayer.webp" alt="">
@@ -178,7 +178,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'infuse://x-callback-url/play?url=' + url" target="_blank">
+                        <a :href="'infuse://x-callback-url/play?url=' + encodeURI(url)" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/infuse.webp" alt="">
@@ -188,7 +188,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'intent:' + url" target="_blank">
+                        <a :href="'intent:' + encodeURI(url)" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/mxplayer.webp" alt="">
@@ -198,7 +198,7 @@
                         </a>
                     </li>
                     <li class="play-item">
-                        <a :href="'intent:' + url" target="_blank">
+                        <a :href="'intent:' + encodeURI(url)" target="_blank">
                             <n-tooltip trigger="hover">
                                 <template #trigger>
                                     <img class="play-icon" src="/images/mxplayer-pro.webp" alt="">

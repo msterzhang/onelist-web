@@ -337,7 +337,7 @@ export default {
             if (!is_ali_open.value) {
                 setting.value.id = season.value.episodes[speed.value].url;
                 url.value = alist_host.value + season.value.episodes[speed.value].url;
-                urlBase.value = url.value;
+                urlBase.value = encodeURI(url.value);
                 chunkSubtitles(season.value.episodes[speed.value].url);
             }
             let selectList = {
@@ -349,10 +349,10 @@ export default {
                     localStorage.setItem(`${id.value}_${gallery_type.value}`, item.speed);
                     document.title = gallery_type.value == "tv" ? `${data.value.name}第${item.speed + 1}集` : data.value.title
                     if (is_ali_open.value) {
-                        urlBase.value = alist_host.value + item.url
+                        urlBase.value = encodeURI(alist_host.value + item.url)
                         OpenVideo(item.url);
                     } else {
-                        urlBase.value = item.url;
+                        urlBase.value = encodeURI(item.url);
                         art.switchUrl(item.url, item.html);
                         art.option.id = item.url.replaceAll(alist_host.value, "");
                         art.on('ready', () => {
@@ -615,7 +615,7 @@ export default {
                 }
             }).then(res => {
                 if (res.data.code == 200) {
-                    urlBase.value = alist_host.value + file;
+                    urlBase.value = encodeURI(alist_host.value + file);
                     if (art == null) {
                         CreateQuality(res.data, file);
                     } else {
@@ -824,7 +824,7 @@ export default {
                         } else {
                             url.value = alist_host.value + data.value.url;
                             setting.value.id = data.value.url;
-                            urlBase.value = url.value;
+                            urlBase.value = encodeURI(url.value);
                             chunkSubtitles(data.value.url);
                             loading.value = false;
                         }

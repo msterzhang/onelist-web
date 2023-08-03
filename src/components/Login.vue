@@ -23,12 +23,16 @@
                             <div class="icon">
                                 <i class='bx bx-key'></i>
                             </div>
-                            <input v-model="user.user_password" type="password" name="password" placeholder="密码"
-                                required=""  autocomplete="off">
+                            <input v-model="user.user_password" type="password" name="password" placeholder="密码" required=""
+                                autocomplete="off">
                         </div>
                         <div class="form-control">
                             <button class="btn login-btn" @click="LoginUser()">登录</button>
                         </div>
+                        <!-- <div class="tool">
+                            <h4></h4>
+                            <h4 @click="RegistUser()">注册账号</h4>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -168,7 +172,7 @@ export default {
 .container .top .header .title {
     position: relative;
     top: 2px;
-    color:white;
+    color: white;
     font-weight: 600;
     font-size: 33px;
     font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;

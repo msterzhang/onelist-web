@@ -2,8 +2,7 @@
 // 定义一些公共的属性和方法
 let title = 'OneList';
 let apiUrl = process.env.NODE_ENV === 'production' ? "" : 'http://127.0.0.1:5245';
-// let imgUrl = "https://image.tmdb.org"
-let imgUrl = "https://tmdb-image-prod.b-cdn.net"
+let imgUrl = "https://image.tmdb.org"
 const isMo = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 import Snackbar from 'node-snackbar';
 
