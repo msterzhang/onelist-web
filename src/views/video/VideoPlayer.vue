@@ -918,13 +918,14 @@ export default {
             return null;
         },
         upload_progress() {
-            let api = `${this.proxy.COMMON.apiUrl}/upload_progress`;
+            let api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update`;
             this.proxy.axios.post(api, {
                 "data": localStorage.artplayer_settings,
             }, {
                 headers: {
                     'content-type': 'application/json',
-                    'UserId': this.getCookie('UserId')
+                    'UserId': this.getCookie('UserId'),
+                    "Authorization": this.proxy.$cookies.get("Authorization")
                 }
             }).then(res => {
             }).catch((error) => {
