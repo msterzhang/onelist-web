@@ -541,7 +541,8 @@ export default {
 
         // srt，ass，ssa
         function chunkSubtitle(file, subtitleType) {
-            let subtitlePath = alist_host.value + file.replaceAll(file.split('.').pop(), subtitleType);
+            console.log(file);
+            let subtitlePath = alist_host.value + file.replaceAll(file.split('.').pop().split('?')[0], subtitleType);
             proxy.axios.get(subtitlePath, {
                 headers: {
                     'content-type': 'application/json',
@@ -882,7 +883,8 @@ export default {
             siderRef,
             videoRef,
             left,
-            season
+            season,
+            proxy
         }
     },
     methods: {
@@ -903,7 +905,39 @@ export default {
                 }
             })
         },
+
+        getCookie(name) {
+            const cookieValue = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith(name + "="));
+
+            if (cookieValue) {
+                return cookieValue.split("=")[1];
+            }
+
+            return null;
+        },
+        upload_progress() {
+            let api = `${this.proxy.COMMON.apiUrl}/upload_progress`;
+            this.proxy.axios.post(api, {
+                "data": localStorage.artplayer_settings,
+            }, {
+                headers: {
+                    'content-type': 'application/json',
+                    'UserId': this.getCookie('UserId')
+                }
+            }).then(res => {
+            }).catch((error) => {
+            });
+
+        }
     },
+    mounted() {
+        this.timer = setInterval(this.upload_progress, 10000)
+    },
+    beforeRouteLeave() {
+        clearInterval(this.timer)
+    }
 }
 
 </script >

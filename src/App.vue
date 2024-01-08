@@ -311,6 +311,20 @@ export default defineComponent({
 
         onMounted(() => {
             getConfig();
+            
+            const cookieValue = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("UserId" + "="));
+            console.log(cookieValue);
+            proxy.axios.get(proxy.COMMON.apiUrl + `/get_progress`, {headers: {
+                    'content-type': 'application/json',
+                    'UserId': cookieValue.split("=")[1]
+                }}).then(res => {
+
+                console.log(res.data);
+                localStorage.artplayer_settings = JSON.stringify(res.data);
+            }).catch((error) => {
+            });
         });
         return {
             dark,
