@@ -846,6 +846,11 @@ export default {
             art.on('restart', () => {
                 url.value = encodeURI(art.url);
             });
+            art.on('ready', () => {
+                console.info(art.currentTime);
+                art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
+                console.info(art.currentTime);
+            });
         }
 
         onBeforeRouteUpdate((to, from) => {
