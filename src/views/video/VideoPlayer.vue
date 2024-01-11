@@ -289,7 +289,8 @@ import Artplayer from "./ArtPlayer.vue";
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import { getCurrentInstance, onMounted, ref } from "vue";
-import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import { loadRouteLocation, onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import artplayerPluginDanmuku from "artplayer-plugin-danmuku";
 export default {
     name: 'VideoPlayer',
     components: {
@@ -342,11 +343,12 @@ export default {
             }
             let selectList = {
                 html: '选集',
-                width: 200,
+                width: 500,
                 tooltip: season.value.name,
                 selector: [],
                 onSelect: function (item, $dom, event) {
                     localStorage.setItem(`${id.value}_${gallery_type.value}`, item.speed);
+                    location.reload()
                     document.title = gallery_type.value == "tv" ? `${data.value.name}第${item.speed + 1}集` : data.value.title
                     if (is_ali_open.value) {
                         urlBase.value = encodeURI(alist_host.value + item.url)
@@ -655,6 +657,39 @@ export default {
 
 
         function initArt() {
+
+            async function danmu(url) {
+                var ret_list = []
+                var res = await fetch(url)
+                res = await res.json()
+                if (res.code == 200) {
+                    var r = await fetch(res.url)
+                    var dm_xml = await r.text();
+                    const regex = /<d p="(.*?)">(.*?)<\/d>/g;
+                    let match;
+                    while ((match = regex.exec(dm_xml)) !== null) {
+                        var _time_data = match[1].split(",")
+                        var data = match[2]
+                        ret_list.push(
+                            {
+                                'text': data,
+                                "time": parseFloat(_time_data[0]),
+                                "color": "#" + parseInt(_time_data[3]).toString(16).replace("0x", ''),
+                                "border": false,
+                                "mode": 0
+                            }
+                        )
+                    }
+
+                    return ret_list
+                }
+                else{
+                    proxy.COMMON.ShowMsg(res.msg)
+                    return ret_list 
+                }
+            }
+            console.log(id.value);
+            console.log(localStorage.getItem(id.value + "_tv"));
             setting.value = {
                 url: "",
                 id: "",
@@ -733,6 +768,29 @@ export default {
                 },
                 plugins: [
                     //   artplayerPluginControl(),
+                    artplayerPluginDanmuku(
+                        {
+                            danmuku: () => { return danmu(`${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${data.value.id}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}`) },
+                            speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
+                            opacity: 1, // 弹幕透明度，范围在[0 ~ 1]
+                            fontSize: 25, // 字体大小，支持数字和百分比
+                            color: '#FFFFFF', // 默认字体颜色
+                            mode: 0, // 默认模式，0-滚动，1-静止
+                            margin: [10, '25%'], // 弹幕上下边距，支持数字和百分比
+                            antiOverlap: true, // 是否防重叠
+                            useWorker: true, // 是否使用 web worker
+                            synchronousPlayback: true, // 是否同步到播放速度
+                            filter: (danmu) => danmu.text.length < 50, // 弹幕过滤函数，返回 true 则可以发送
+                            lockTime: 5, // 输入框锁定时间，单位秒，范围在[1 ~ 60]
+                            maxLength: 100, // 输入框最大可输入的字数，范围在[0 ~ 500]
+                            minWidth: 200, // 输入框最小宽度，范围在[0 ~ 500]，填 0 则为无限制
+                            maxWidth: 600, // 输入框最大宽度，范围在[0 ~ Infinity]，填 0 则为 100% 宽度
+                            theme: 'light', // 输入框自定义挂载时的主题色，默认为 dark，可以选填亮色 light
+                            heatmap: true, // 是否开启弹幕热度图, 默认为 false
+                            beforeEmit: (danmu) => !!danmu.text.trim(), // 发送弹幕前的自定义校验，返回 true 则可以发送
+
+                        }
+                    )
                 ],
             }
         }
@@ -796,6 +854,7 @@ export default {
                 if (res.data.code == 200) {
                     season.value = res.data.data;
                     selectList();
+                    // LoadBulletScreen();
                 } else {
                     proxy.COMMON.ShowMsg(res.data.msg)
                 }
@@ -847,9 +906,18 @@ export default {
                 url.value = encodeURI(art.url);
             });
             art.on('ready', () => {
-                console.info(art.currentTime);
                 art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
-                console.info(art.currentTime);
+            });
+            art.on('ended', () => {
+                console.log("视频播放完毕");
+                speed.value++
+            });
+            art.on('waiting', () => {
+                console.log("播放链接过期");
+            });
+
+            art.on('artplayerPluginDanmuku:loaded', (danmus) => {
+                console.info('加载弹幕', danmus.length);
             });
         }
 
@@ -924,8 +992,15 @@ export default {
         },
         upload_progress() {
             let api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update`;
+            var data = {}
+            for (var k of Object.keys(localStorage)) {
+                if (k.endsWith("_tv")) {
+                    data[k] = localStorage[k]
+                }
+            }
+            data["artplayer_settings"] = localStorage.artplayer_settings
             this.proxy.axios.post(api, {
-                "data": localStorage.artplayer_settings,
+                "data": data
             }, {
                 headers: {
                     'content-type': 'application/json',
@@ -939,7 +1014,7 @@ export default {
         }
     },
     mounted() {
-        this.timer = setInterval(this.upload_progress, 10000)
+        // this.timer = setInterval(this.upload_progress, 10000)
     },
     beforeRouteLeave() {
         clearInterval(this.timer)
