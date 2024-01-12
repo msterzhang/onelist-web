@@ -1035,7 +1035,7 @@ export default {
         }
     },
     mounted() {
-        // this.timer = setInterval(this.upload_progress, 10000)
+        this.timer = setInterval(this.upload_progress, 10000)
     },
     beforeRouteLeave() {
         clearInterval(this.timer)
