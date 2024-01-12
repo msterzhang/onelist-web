@@ -343,7 +343,7 @@ export default {
             }
             let selectList = {
                 html: '选集',
-                width: 500,
+                width: 300,
                 tooltip: season.value.name,
                 selector: [],
                 onSelect: function (item, $dom, event) {
@@ -688,8 +688,7 @@ export default {
                     return ret_list 
                 }
             }
-            console.log(id.value);
-            console.log(localStorage.getItem(id.value + "_tv"));
+            console.log(gallery_type);
             setting.value = {
                 url: "",
                 id: "",
@@ -770,7 +769,7 @@ export default {
                     //   artplayerPluginControl(),
                     artplayerPluginDanmuku(
                         {
-                            danmuku: () => { return danmu(`${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${data.value.id}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}`) },
+                            danmuku: () => { return danmu(`${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${data.value.id}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`) },
                             speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
                             opacity: 1, // 弹幕透明度，范围在[0 ~ 1]
                             fontSize: 25, // 字体大小，支持数字和百分比
@@ -906,19 +905,41 @@ export default {
                 url.value = encodeURI(art.url);
             });
             art.on('ready', () => {
+                console.log(art.url);
                 art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
             });
-            art.on('ended', () => {
+            art.on('video:ended', () => {
                 console.log("视频播放完毕");
-                speed.value++
+                speed.value += 1;
+                localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
+                location.reload()
             });
-            art.on('waiting', () => {
+            art.on('video:waiting', () => {
                 console.log("播放链接过期");
             });
 
-            art.on('artplayerPluginDanmuku:loaded', (danmus) => {
-                console.info('加载弹幕', danmus.length);
+            art.on('video:canplay', () => {
+                console.log("浏览器可以播放媒体文件了，但估计没有足够的数据来支撑播放到结束，不必停下来进一步缓冲内容");
             });
+
+            art.on('video:canplaythrough', () => {
+                console.log("浏览器估计它可以在不停止内容缓冲的情况下播放媒体直到结束");
+            });
+
+            art.on('video:emptied', () => {
+                console.log("媒体内容变为空；例如，当这个 media 已经加载完成（或者部分加载完成），则发送此事件，并调用 load() 方法重新加载它");
+            });
+
+            art.on('video:error',()=>{
+                art.url = art.url
+                console.log("获取媒体数据时出错，或者资源类型不是受支持的媒体格式");
+            });
+
+            art.on('video:stalled',()=>{
+                console.log("用户代理（user agent）正在尝试获取媒体数据，但数据意外未出现");
+            });
+
+            
         }
 
         onBeforeRouteUpdate((to, from) => {
