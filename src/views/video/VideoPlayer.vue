@@ -683,9 +683,9 @@ export default {
 
                     return ret_list
                 }
-                else{
+                else {
                     proxy.COMMON.ShowMsg(res.msg)
-                    return ret_list 
+                    return ret_list
                 }
             }
             console.log(gallery_type);
@@ -771,14 +771,14 @@ export default {
                         {
                             danmuku: () => { return danmu(`${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${data.value.id}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`) },
                             speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
-                            opacity: 1, // 弹幕透明度，范围在[0 ~ 1]
-                            fontSize: 25, // 字体大小，支持数字和百分比
+                            opacity: 0.5, // 弹幕透明度，范围在[0 ~ 1]
+                            fontSize: '3%', // 字体大小，支持数字和百分比
                             color: '#FFFFFF', // 默认字体颜色
                             mode: 0, // 默认模式，0-滚动，1-静止
                             margin: [10, '25%'], // 弹幕上下边距，支持数字和百分比
                             antiOverlap: true, // 是否防重叠
                             useWorker: true, // 是否使用 web worker
-                            synchronousPlayback: true, // 是否同步到播放速度
+                            synchronousPlayback: false, // 是否同步到播放速度
                             filter: (danmu) => danmu.text.length < 50, // 弹幕过滤函数，返回 true 则可以发送
                             lockTime: 5, // 输入框锁定时间，单位秒，范围在[1 ~ 60]
                             maxLength: 100, // 输入框最大可输入的字数，范围在[0 ~ 500]
@@ -930,16 +930,16 @@ export default {
                 console.log("媒体内容变为空；例如，当这个 media 已经加载完成（或者部分加载完成），则发送此事件，并调用 load() 方法重新加载它");
             });
 
-            art.on('video:error',()=>{
+            art.on('video:error', () => {
                 art.url = art.url
                 console.log("获取媒体数据时出错，或者资源类型不是受支持的媒体格式");
             });
 
-            art.on('video:stalled',()=>{
+            art.on('video:stalled', () => {
                 console.log("用户代理（user agent）正在尝试获取媒体数据，但数据意外未出现");
             });
 
-            
+
         }
 
         onBeforeRouteUpdate((to, from) => {
