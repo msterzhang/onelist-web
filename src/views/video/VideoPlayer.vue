@@ -770,15 +770,15 @@ export default {
                     artplayerPluginDanmuku(
                         {
                             danmuku: () => { return danmu(`${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${data.value.id}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`) },
-                            speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
+                            speed: 8.5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
                             opacity: 0.5, // 弹幕透明度，范围在[0 ~ 1]
                             fontSize: '3%', // 字体大小，支持数字和百分比
                             color: '#FFFFFF', // 默认字体颜色
                             mode: 0, // 默认模式，0-滚动，1-静止
-                            margin: [10, '25%'], // 弹幕上下边距，支持数字和百分比
+                            margin: [10, '75%'], // 弹幕上下边距，支持数字和百分比
                             antiOverlap: true, // 是否防重叠
                             useWorker: true, // 是否使用 web worker
-                            synchronousPlayback: false, // 是否同步到播放速度
+                            synchronousPlayback: true, // 是否同步到播放速度
                             filter: (danmu) => danmu.text.length < 50, // 弹幕过滤函数，返回 true 则可以发送
                             lockTime: 5, // 输入框锁定时间，单位秒，范围在[1 ~ 60]
                             maxLength: 100, // 输入框最大可输入的字数，范围在[0 ~ 500]
@@ -905,8 +905,13 @@ export default {
                 url.value = encodeURI(art.url);
             });
             art.on('ready', () => {
-                console.log(art.url);
+                if (localStorage.playbackRate) {
+                    art.playbackRate = localStorage.playbackRate;
+                }
                 art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
+            });
+            art.on('video:ratechange', () => {
+                localStorage.playbackRate = art.playbackRate;
             });
             art.on('video:ended', () => {
                 console.log("视频播放完毕");
@@ -959,6 +964,16 @@ export default {
         onMounted(() => {
             initArt();
             fetchData();
+            setInterval(() => {
+                console.log("定时器");
+                console.log(season.value);
+                var new_url = encodeURI(alist_host.value + season.value.episodes[speed.value].url)
+                console.log(new_url);
+                art.switchUrl(new_url)
+                setTimeout(() => {
+                    art.switchUrl(new_url);
+                }, 3000);
+            }, 1000 * 60 * 14)
         });
 
         return {
@@ -978,7 +993,7 @@ export default {
             videoRef,
             left,
             season,
-            proxy
+            proxy,
         }
     },
     methods: {
