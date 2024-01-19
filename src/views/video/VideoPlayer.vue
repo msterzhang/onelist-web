@@ -907,6 +907,7 @@ export default {
                     art.playbackRate = localStorage.playbackRate;
                 }
                 art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
+                art.play();
             });
             art.on('video:ratechange', () => {
                 localStorage.playbackRate = art.playbackRate;
