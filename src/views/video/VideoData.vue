@@ -387,6 +387,58 @@ export default {
                             oldPath = oldPath.substr(0, oldPath.lastIndexOf("/"))
                         }
                         tvPath.value = oldPath;
+
+
+                        const cookieValue = document.cookie
+                            .split("; ")
+                            .find((row) => row.startsWith("UserId" + "="));
+                        proxy.axios.get(proxy.COMMON.apiUrl + `/v1/api/progress/get`, {
+                            headers: {
+                                'content-type': 'application/json',
+                                'UserId': cookieValue.split("=")[1],
+                                'Authorization': proxy.$cookies.get("Authorization")
+                            }
+                        }).then(res => {
+                            var res_data = JSON.parse(res.data.data);
+                            for (var k of Object.keys(res_data)) {
+                                if (k != "artplayer_settings") {
+                                    for (var v of Object.keys(res_data[k])) {
+                                        localStorage.setItem(v, res_data[k][v]);
+
+                                    }
+                                }
+                            }
+                            var times = {};
+                            var a = localStorage.artplayer_settings != undefined ? localStorage.artplayer_settings : "{}";
+                            var local_times = JSON.parse(a).times;
+                            if (local_times == undefined) local_times = {};
+                            var server_times = res_data.artplayer_settings.times;
+                            if (server_times == undefined) server_times = {};
+                            var times_keys = Array.from(new Set(Object.keys(local_times).concat(Object.keys(server_times))));
+                            for (var key of times_keys) {
+                                var f_path = filePath.split("?")[0].split("/")
+                                f_path = f_path.slice(0, -1).join("/");
+                                if (key.search(f_path) == -1) {
+                                    continue;
+                                }
+                                // 两个都存在，对比本地与线上的进度，如果线上大于本地，则更新本地进度
+                                if (key in local_times && key in server_times) {
+                                    // 默认使用本地进度
+                                    times[key] = local_times[key];
+                                    if (local_times[key] < server_times[key]) {
+                                        times[key] = server_times[key];
+                                    }
+                                }
+                                if (!(key in local_times) && key in server_times) {
+                                    times[key] = server_times[key];
+                                }
+
+                            }
+                            localStorage.artplayer_settings = JSON.stringify({ "times": times });
+                        }).catch((error) => {
+                        });
+
+
                     }
                 } else {
                     proxy.COMMON.ShowMsg(res.data.msg)
@@ -442,54 +494,6 @@ export default {
             fetchData();
         };
 
-        onMounted(() => {
-
-            const cookieValue = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("UserId" + "="));
-            console.log(cookieValue);
-            proxy.axios.get(proxy.COMMON.apiUrl + `/v1/api/progress/get`, {
-                headers: {
-                    'content-type': 'application/json',
-                    'UserId': cookieValue.split("=")[1],
-                    'Authorization': proxy.$cookies.get("Authorization")
-                }
-            }).then(res => {
-                var res_data = JSON.parse(res.data.data);
-                for(var k of Object.keys(res_data)){
-                    if (k!="artplayer_settings"){
-                        localStorage.setItem(k, res_data[k]);
-                        console.log(res_data[k]);
-                    }
-                }
-
-                console.log(res.data);
-                var times = {};
-                var a = localStorage.artplayer_settings != undefined ? localStorage.artplayer_settings : "{}";
-                var local_times = JSON.parse(a).times;
-                if (local_times == undefined) local_times = {};
-                var server_times = JSON.parse(res_data.artplayer_settings).times;
-                if (server_times == undefined) server_times = {};
-                var times_keys = Array.from(new Set(Object.keys(local_times).concat(Object.keys(server_times))));
-                console.log(times_keys);
-                for (var key of times_keys) {
-                    // 两个都存在，对比本地与线上的进度，如果线上大于本地，则更新本地进度
-                    if (key in local_times && key in server_times) {
-                        // 默认使用本地进度
-                        times[key] = local_times[key];
-                        if (local_times[key] < server_times[key]) {
-                            times[key] = server_times[key];
-                        }
-                    }
-                    if (!(key in local_times) && key in server_times) {
-                        times[key] = server_times[key];
-                    }
-
-                }
-                localStorage.artplayer_settings = JSON.stringify({ "times": times });
-            }).catch((error) => {
-            });
-        });
 
         return {
             id,

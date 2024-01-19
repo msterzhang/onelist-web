@@ -543,7 +543,6 @@ export default {
 
         // srt，ass，ssa
         function chunkSubtitle(file, subtitleType) {
-            console.log(file);
             let subtitlePath = alist_host.value + file.replaceAll(file.split('.').pop().split('?')[0], subtitleType);
             proxy.axios.get(subtitlePath, {
                 headers: {
@@ -688,7 +687,6 @@ export default {
                     return ret_list
                 }
             }
-            console.log(gallery_type);
             setting.value = {
                 url: "",
                 id: "",
@@ -965,11 +963,16 @@ export default {
             initArt();
             fetchData();
             setInterval(() => {
-                console.log("定时器");
-                console.log(season.value);
-                var new_url = encodeURI(alist_host.value + season.value.episodes[speed.value].url)
-                console.log(new_url);
-                art.switchUrl(new_url)
+                if (gallery_type.value == "tv") {
+                    var new_url = encodeURI(alist_host.value + season.value.episodes[speed.value].url)
+                }
+                else {
+                    var new_url = encodeURI(alist_host.value + data.value.url)
+                }
+                var currentTime = art.currentTime;
+                console.log(currentTime);
+                // art.url = new_url;
+                art.currentTime = currentTime;
                 setTimeout(() => {
                     art.switchUrl(new_url);
                 }, 3000);
@@ -1029,12 +1032,14 @@ export default {
         upload_progress() {
             let api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update`;
             var data = {}
+            var tv = {}
             for (var k of Object.keys(localStorage)) {
                 if (k.endsWith("_tv")) {
-                    data[k] = localStorage[k]
+                    tv[k] = localStorage[k]
                 }
             }
-            data["artplayer_settings"] = localStorage.artplayer_settings
+            data['tv'] = tv
+            data["artplayer_settings"] = JSON.parse(localStorage.artplayer_settings)
             this.proxy.axios.post(api, {
                 "data": data
             }, {
