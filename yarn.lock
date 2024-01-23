@@ -1941,20 +1941,20 @@ array-union@^2.1.0:
   resolved "https://registry.npmjs.org/array-union/-/array-union-2.1.0.tgz"
   integrity sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==
 
-artplayer-plugin-control@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmmirror.com/artplayer-plugin-control/-/artplayer-plugin-control-1.0.0.tgz"
-  integrity sha512-LBLCyVuL9UtHFFwDXAPG0vm2snVv82kZKr6+kMSlVxzpaX8Nl5xJEFqFwFz1Pc2EvBR6uP3ytAvyA7WvqAA5cA==
+artplayer-plugin-control@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/artplayer-plugin-control/-/artplayer-plugin-control-2.0.0.tgz#6563867d91816733080365156fa77b45299add79"
+  integrity sha512-EELMIM9EJn90Tc0z3JE9x0yFvS4MkUDhiGP35KFXN2AHgshaJUPTQn2gKtPTRZwrAF3pMK2oum67wVxBDl6ecg==
 
 artplayer-plugin-danmuku@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/artplayer-plugin-danmuku/-/artplayer-plugin-danmuku-5.0.1.tgz#1b4bec56569a6363695c74d105e0b426d03f884f"
   integrity sha512-b6/Y4/+X0rNmnqS5+zzQgow+WW4iVT8eFv4LAUzJgIyORIcf5Gn00Dy0PZ+kwGb1VJy0CUCRK6gVVvh0tWsRAg==
 
-artplayer@^5.0.7:
-  version "5.0.7"
-  resolved "https://registry.npmjs.org/artplayer/-/artplayer-5.0.7.tgz"
-  integrity sha512-ma1h7Do8SRHrele5WPuT/DlB5nR7HegPfWG0P/Plg1w4P9PidBxF1G/gSd44e2yC5DaIuV+W9XU7vgxGNkd23g==
+artplayer@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/artplayer/-/artplayer-5.1.1.tgz#a35071036f899aafb3a8f1fa3a9e0755dc6d5b66"
+  integrity sha512-pZ2/lB+Oo3g0CVLqkFuB86bMBPMtZaABaq5e1LPKubYDBW46+mzin2wzdVmk3tvFyfQoVnb+MBFU7nJYvI3qNg==
   dependencies:
     option-validator "^2.0.6"
 

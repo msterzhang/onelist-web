@@ -324,6 +324,10 @@ export default {
         id.value = proxy.$route.query.id;
 
         let speed_str = localStorage.getItem(`${id.value}_${gallery_type.value}`)
+
+        if (gallery_type.value == "tv") {
+            speed_str = localStorage.getItem(`${season_id.value}_${gallery_type.value}`)
+        }
         if (speed_str != null) {
             speed.value = parseInt(speed_str);
         }
@@ -347,7 +351,13 @@ export default {
                 tooltip: season.value.name,
                 selector: [],
                 onSelect: function (item, $dom, event) {
-                    localStorage.setItem(`${id.value}_${gallery_type.value}`, item.speed);
+                    console.log("选集");
+                    if (gallery_type.value == "tv") {
+                        localStorage.setItem(`${season_id.value}_${gallery_type.value}`, item.speed);
+                    }
+                    else {
+                        localStorage.setItem(`${id.value}_${gallery_type.value}`, item.speed);
+                    }
                     location.reload()
                     document.title = gallery_type.value == "tv" ? `${data.value.name}第${item.speed + 1}集` : data.value.title
                     if (is_ali_open.value) {
@@ -675,7 +685,7 @@ export default {
                                 "time": parseFloat(_time_data[0]),
                                 "color": "#" + parseInt(_time_data[3]).toString(16).replace("0x", ''),
                                 "border": false,
-                                "mode": 0
+                                "mode": parseInt(_time_data[1]) - 1
                             }
                         )
                     }
@@ -767,7 +777,7 @@ export default {
                     //   artplayerPluginControl(),
                     artplayerPluginDanmuku(
                         {
-                            danmuku: () => { return danmu(`${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${data.value.id}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`) },
+                            danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`,
                             speed: 8.5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
                             opacity: 0.5, // 弹幕透明度，范围在[0 ~ 1]
                             fontSize: '3%', // 字体大小，支持数字和百分比
