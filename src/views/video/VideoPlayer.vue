@@ -317,7 +317,7 @@ export default {
         const siderRef = ref(null);
         const videoRef = ref(null);
         const left = ref(null);
-        left.value = 6 * 170 + 50;
+                left.value = 6 * 170 + 50;
         const { proxy } = getCurrentInstance();
         gallery_type.value = proxy.$route.query.gallery_type;
         season_id.value = proxy.$route.query.season_id;
@@ -697,6 +697,12 @@ export default {
                     return ret_list
                 }
             }
+            if (gallery_type.value == "tv") {
+                var danmuku = `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(season_id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`;
+            }
+            else{
+                var danmuku = `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`;
+            }
             setting.value = {
                 url: "",
                 id: "",
@@ -777,7 +783,7 @@ export default {
                     //   artplayerPluginControl(),
                     artplayerPluginDanmuku(
                         {
-                            danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`,
+                            danmuku: danmuku,
                             speed: 8.5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
                             opacity: 0.5, // 弹幕透明度，范围在[0 ~ 1]
                             fontSize: '3%', // 字体大小，支持数字和百分比
@@ -925,7 +931,12 @@ export default {
             art.on('video:ended', () => {
                 console.log("视频播放完毕");
                 speed.value += 1;
-                localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
+                if (gallery_type.value == "tv") {
+                    localStorage.setItem(`${season_id.value}_${gallery_type.value}`, speed.value);
+                }
+                else {
+                    localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
+                }
                 location.reload()
             });
             art.on('video:waiting', () => {
