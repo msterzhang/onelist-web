@@ -317,7 +317,7 @@ export default {
         const siderRef = ref(null);
         const videoRef = ref(null);
         const left = ref(null);
-                left.value = 6 * 170 + 50;
+        left.value = 6 * 170 + 50;
         const { proxy } = getCurrentInstance();
         gallery_type.value = proxy.$route.query.gallery_type;
         season_id.value = proxy.$route.query.season_id;
@@ -700,7 +700,7 @@ export default {
             if (gallery_type.value == "tv") {
                 var danmuku = `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(season_id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`;
             }
-            else{
+            else {
                 var danmuku = `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`;
             }
             setting.value = {
@@ -913,6 +913,47 @@ export default {
             });
         }
 
+        function get_progress() {
+            var params = new URLSearchParams(window.location.search);
+            var api = "";
+            if (params.get("gallery_type") == "tv") {
+                api = `${proxy.COMMON.apiUrl}/v1/api/progress/get?tv_id=${params.get("id")}&season_id=${params.get("season_id")}`;
+            }
+            else {
+                api = `${proxy.COMMON.apiUrl}/v1/api/progress/get?tv_id=${params.get("id")}`;
+            }
+            const cookieValue = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("UserId" + "="));
+            proxy.axios.post(api, {
+                "data": season.value.episodes[speed.value].url
+            }, {
+                headers: {
+                    'content-type': 'application/json',
+                    'UserId': cookieValue.split("=")[1],
+                    'Authorization': proxy.$cookies.get("Authorization")
+                }
+            }).then(res => {
+                var times = {};
+                var res_data = JSON.parse(res.data.data);
+                var tv_path = res_data.tv_path;
+                var _time = res_data.time;
+                var a = localStorage.artplayer_settings != undefined ? localStorage.artplayer_settings : "{}";
+                var local_times = JSON.parse(a).times;
+                if (tv_path in local_times) {
+                    // 默认使用本地进度
+                    times[tv_path] = local_times[tv_path];
+                    if (local_times[tv_path] < _time) {
+                        times[key] = _time;
+                    }
+                }
+                else {
+                    times[tv_path] = _time;
+                }
+                localStorage.artplayer_settings = JSON.stringify({ "times": times });
+            })
+        }
+
         const artF = async (data) => {
             art = data;
             art.on('restart', () => {
@@ -922,8 +963,57 @@ export default {
                 if (localStorage.playbackRate) {
                     art.playbackRate = localStorage.playbackRate;
                 }
-                art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
-                art.play();
+
+                var params = new URLSearchParams(window.location.search);
+                var api = "";
+                if (params.get("gallery_type") == "tv") {
+                    api = `${proxy.COMMON.apiUrl}/v1/api/progress/get?tv_id=${params.get("id")}&season_id=${params.get("season_id")}`;
+                }
+                else {
+                    api = `${proxy.COMMON.apiUrl}/v1/api/progress/get?tv_id=${params.get("id")}`;
+                }
+                const cookieValue = document.cookie
+                    .split("; ")
+                    .find((row) => row.startsWith("UserId" + "="));
+                proxy.axios.post(api, {
+                    "data": art.url
+                }, {
+                    headers: {
+                        'content-type': 'application/json',
+                        'UserId': cookieValue.split("=")[1],
+                        'Authorization': proxy.$cookies.get("Authorization")
+                    }
+                }).then(res => {
+                    console.log("请求成功");
+                    var times = {};
+                    var res_data = res.data.data;
+                    if (res_data == undefined) {
+                        art.play();
+                    }
+                    else {
+                        var tv_path = res_data.tv_path;
+                        var _time = res_data.time;
+                        var a = localStorage.artplayer_settings != undefined ? localStorage.artplayer_settings : "{}";
+                        var local_times = JSON.parse(a).times;
+                        if (tv_path in local_times) {
+                            // 默认使用本地进度
+                            times[tv_path] = local_times[tv_path];
+                            if (local_times[tv_path] < _time) {
+                                times[tv_path] = _time;
+                            }
+                        }
+                        else {
+                            times[tv_path] = _time;
+                        }
+                        localStorage.artplayer_settings = JSON.stringify({ "times": times });
+                        console.log("进度已保存");
+                        art.currentTime = _time;
+                        art.play();
+                    }
+
+                })
+
+                // art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
             });
             art.on('video:ratechange', () => {
                 localStorage.playbackRate = art.playbackRate;
@@ -956,7 +1046,6 @@ export default {
             });
 
             art.on('video:error', () => {
-                art.url = art.url
                 console.log("获取媒体数据时出错，或者资源类型不是受支持的媒体格式");
             });
 
@@ -984,6 +1073,7 @@ export default {
         onMounted(() => {
             initArt();
             fetchData();
+            // get_progress();
             setInterval(() => {
                 if (gallery_type.value == "tv") {
                     var new_url = encodeURI(alist_host.value + season.value.episodes[speed.value].url)
@@ -994,9 +1084,11 @@ export default {
                 var currentTime = art.currentTime;
                 console.log(currentTime);
                 // art.url = new_url;
-                art.currentTime = currentTime;
+                var url = new URL(new_url);
+                url.searchParams.append("r", new Date().getTime());
+                art.seek = currentTime;
                 setTimeout(() => {
-                    art.switchUrl(new_url);
+                    art.switchQuality(url.toString());
                 }, 3000);
             }, 1000 * 60 * 14)
         });
@@ -1052,7 +1144,14 @@ export default {
             return null;
         },
         upload_progress() {
-            let api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update`;
+            var params = new URLSearchParams(window.location.search);
+            var api = "";
+            if (params.get("gallery_type") == "tv") {
+                api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update?tv_id=${params.get("id")}&season_id=${params.get("season_id")}`;
+            }
+            else {
+                api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update?tv_id=${params.get("id")}`;
+            }
             var data = {}
             var tv = {}
             for (var k of Object.keys(localStorage)) {
