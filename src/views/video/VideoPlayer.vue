@@ -836,6 +836,12 @@ export default {
                                     'Authorization': proxy.$cookies.get("Authorization")
                                 }
                             }).then(res => {
+                                if (item.html == '记录片头') {
+                                    season.value.head_time = res.data.data;
+                                }
+                                else {
+                                    season.value.tail_time = res.data.data;
+                                }
                                 proxy.COMMON.ShowMsg(res.data.msg)
                             })
                             return '记录片头片尾';
@@ -1117,7 +1123,7 @@ export default {
                 var res_data = res.data.data;
                 if (res_data == undefined) {
                     art.storage.name = 'skip';
-                    if (art.storage.get('skip') == undefined || art.storage.get('skip')) {
+                    if ((art.storage.get('skip') == undefined || art.storage.get('skip'))&& head_time > 0) {
                         proxy.COMMON.ShowMsg("跳过开头")
                         art.currentTime = head_time;
                     }
@@ -1179,10 +1185,10 @@ export default {
             var params = new URLSearchParams(window.location.search);
             var api = "";
             if (params.get("gallery_type") == "tv") {
-                api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update?tv_id=${params.get("id")}&season_id=${params.get("season_id")}`;
+                api = `${proxy.COMMON.apiUrl}/v1/api/progress/update?tv_id=${params.get("id")}&season_id=${params.get("season_id")}`;
             }
             else {
-                api = `${this.proxy.COMMON.apiUrl}/v1/api/progress/update?tv_id=${params.get("id")}`;
+                api = `${proxy.COMMON.apiUrl}/v1/api/progress/update?tv_id=${params.get("id")}`;
             }
             var data = {}
             var tv = {}
@@ -1193,13 +1199,13 @@ export default {
             }
             data['tv'] = tv
             data["artplayer_settings"] = JSON.parse(localStorage.artplayer_settings)
-            this.proxy.axios.post(api, {
+            proxy.axios.post(api, {
                 "data": data
             }, {
                 headers: {
                     'content-type': 'application/json',
                     'UserId': getCookie('UserId'),
-                    "Authorization": this.proxy.$cookies.get("Authorization")
+                    "Authorization": proxy.$cookies.get("Authorization")
                 }
             }).then(res => {
             }).catch((error) => {
