@@ -141,8 +141,8 @@ export default {
         const { proxy } = getCurrentInstance();
         const num = ref(null);
         const search = ref(false);
-        const mode = ref("updated_at");
-        const order = ref("DESC");
+        const mode = ref("name");
+        const order = ref("ASC");
         const genre = ref("");
         const year = ref("");
         gallery_uid.value = proxy.$route.query.gallery_uid;
