@@ -351,7 +351,6 @@ export default {
                 tooltip: season.value.name,
                 selector: [],
                 onSelect: function (item, $dom, event) {
-                    console.log("选集");
                     if (gallery_type.value == "tv") {
                         localStorage.setItem(`${season_id.value}_${gallery_type.value}`, item.speed);
                     }
@@ -359,9 +358,9 @@ export default {
                         localStorage.setItem(`${id.value}_${gallery_type.value}`, item.speed);
                     }
                     art.plugins.artplayerPluginDanmuku.config({
-                    danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${item.speed}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
-                })
-                art.plugins.artplayerPluginDanmuku.load();
+                        danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${item.speed}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
+                    })
+                    art.plugins.artplayerPluginDanmuku.load();
                     document.title = gallery_type.value == "tv" ? `${data.value.name}第${item.speed + 1}集` : data.value.title
                     if (is_ali_open.value) {
                         urlBase.value = encodeURI(alist_host.value + item.url)
@@ -962,47 +961,6 @@ export default {
             });
         }
 
-        function get_progress() {
-            var params = new URLSearchParams(window.location.search);
-            var api = "";
-            if (params.get("gallery_type") == "tv") {
-                api = `${proxy.COMMON.apiUrl}/v1/api/progress/get?tv_id=${params.get("id")}&season_id=${params.get("season_id")}`;
-            }
-            else {
-                api = `${proxy.COMMON.apiUrl}/v1/api/progress/get?tv_id=${params.get("id")}`;
-            }
-            const cookieValue = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("UserId" + "="));
-            proxy.axios.post(api, {
-                "data": season.value.episodes[speed.value].url
-            }, {
-                headers: {
-                    'content-type': 'application/json',
-                    'UserId': cookieValue.split("=")[1],
-                    'Authorization': proxy.$cookies.get("Authorization")
-                }
-            }).then(res => {
-                var times = {};
-                var res_data = JSON.parse(res.data.data);
-                var tv_path = res_data.tv_path;
-                var _time = res_data.time;
-                var a = localStorage.artplayer_settings != undefined ? localStorage.artplayer_settings : "{}";
-                var local_times = JSON.parse(a).times;
-                if (tv_path in local_times) {
-                    // 默认使用本地进度
-                    times[tv_path] = local_times[tv_path];
-                    if (local_times[tv_path] < _time) {
-                        times[key] = _time;
-                    }
-                }
-                else {
-                    times[tv_path] = _time;
-                }
-                localStorage.artplayer_settings = JSON.stringify({ "times": times });
-            })
-        }
-
         const artF = async (data) => {
             art = data;
             art.storage.name = 'skip';
@@ -1188,34 +1146,26 @@ export default {
                 else {
                     localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
                 }
-                location.reload()
-            });
-            art.on('video:waiting', () => {
-                console.log("播放链接过期");
-            });
-
-            art.on('video:canplay', () => {
-                console.log("浏览器可以播放媒体文件了，但估计没有足够的数据来支撑播放到结束，不必停下来进一步缓冲内容");
-            });
-
-            art.on('video:canplaythrough', () => {
-                console.log("浏览器估计它可以在不停止内容缓冲的情况下播放媒体直到结束");
-            });
-
-            art.on('video:emptied', () => {
-                console.log("媒体内容变为空；例如，当这个 media 已经加载完成（或者部分加载完成），则发送此事件，并调用 load() 方法重新加载它");
-            });
-
-            art.on('video:error', () => {
-                console.log("获取媒体数据时出错，或者资源类型不是受支持的媒体格式");
-            });
-
-            art.on('video:stalled', () => {
-                console.log("用户代理（user agent）正在尝试获取媒体数据，但数据意外未出现");
+                art.plugins.artplayerPluginDanmuku.config({
+                    danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${speed.value}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
+                })
+                art.plugins.artplayerPluginDanmuku.load();
+                document.title = gallery_type.value == "tv" ? `第${speed.value + 1}集` : data.value.title
+                if (is_ali_open.value) {
+                    urlBase.value = encodeURI(alist_host.value + season.value.episodes[speed.value].url)
+                    OpenVideo(season.value.episodes[speed.value].url);
+                } else {
+                    urlBase.value = encodeURI(season.value.episodes[speed.value].url);
+                    art.switchUrl(is_ali_open.value ? episode.url : alist_host.value + season.value.episodes[speed.value].url);
+                    art.option.id = season.value.episodes[speed.value].url.replaceAll(alist_host.value, "");
+                    art.on('ready', () => {
+                        art.play();
+                        chunkSubtitles(season.value.episodes[speed.value].url.replaceAll(alist_host.value, ""));
+                    });
+                }
             });
 
             art.on('artplayerPluginDanmuku:config', (option) => {
-                console.info('配置变化', option);
                 art.storage.name = 'danmu_setting';
                 var o = JSON.parse(JSON.stringify(option))
                 delete o.danmuku;
