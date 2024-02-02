@@ -358,7 +358,10 @@ export default {
                     else {
                         localStorage.setItem(`${id.value}_${gallery_type.value}`, item.speed);
                     }
-                    location.reload()
+                    art.plugins.artplayerPluginDanmuku.config({
+                    danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${item.speed}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
+                })
+                art.plugins.artplayerPluginDanmuku.load();
                     document.title = gallery_type.value == "tv" ? `${data.value.name}第${item.speed + 1}集` : data.value.title
                     if (is_ali_open.value) {
                         urlBase.value = encodeURI(alist_host.value + item.url)
@@ -689,37 +692,6 @@ export default {
 
 
         function initArt() {
-
-            async function danmu(url) {
-                var ret_list = []
-                var res = await fetch(url)
-                res = await res.json()
-                if (res.code == 200) {
-                    var r = await fetch(res.url)
-                    var dm_xml = await r.text();
-                    const regex = /<d p="(.*?)">(.*?)<\/d>/g;
-                    let match;
-                    while ((match = regex.exec(dm_xml)) !== null) {
-                        var _time_data = match[1].split(",")
-                        var data = match[2]
-                        ret_list.push(
-                            {
-                                'text': data,
-                                "time": parseFloat(_time_data[0]),
-                                "color": "#" + parseInt(_time_data[3]).toString(16).replace("0x", ''),
-                                "border": false,
-                                "mode": parseInt(_time_data[1]) - 1
-                            }
-                        )
-                    }
-
-                    return ret_list
-                }
-                else {
-                    proxy.COMMON.ShowMsg(res.msg)
-                    return ret_list
-                }
-            }
             if (gallery_type.value == "tv") {
                 var danmuku = `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(season_id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`;
             }
@@ -1120,7 +1092,7 @@ export default {
                 })
 
                 // 设置自定义的弹幕设置方案
-                // art.setting.remove('danmuku');
+                art.setting.remove('danmuku');
                 art.setting.add({
                     width: 260,
                     name: "danmuku",
@@ -1134,8 +1106,6 @@ export default {
                         range: [5, 1, 10, 1],
                         onChange: function (t, $dom, event) {
                             // TODO 设置值的代码
-                            console.log(art);
-                            console.log(art);
                             art.plugins.artplayerPluginDanmuku.config({
                                 speed: t.range
                             })
@@ -1149,6 +1119,9 @@ export default {
                         range: [6, 1, 10, 1],
                         onChange: function (t, $dom, event) {
                             // TODO 设置值的代码
+                            art.plugins.artplayerPluginDanmuku.config({
+                                fontSize: t.range + "%"
+                            })
                             return t.range + "%"
                         }
                     }, {
@@ -1159,6 +1132,9 @@ export default {
                         range: [100, 0, 100, 20],
                         onChange: function (t, $dom, event) {
                             // TODO 设置值的代码
+                            art.plugins.artplayerPluginDanmuku.config({
+                                opacity: t.range / 100
+                            })
                             return t.range + "%"
                         }
                     }, {
@@ -1170,6 +1146,9 @@ export default {
 
                         onChange: function (t, $dom, event) {
                             // TODO 设置值的代码
+                            art.plugins.artplayerPluginDanmuku.config({
+                                margin: [10, t.range + "%"]
+                            })
                             return t.range + "%"
                         }
                     }, {
@@ -1177,7 +1156,7 @@ export default {
                         icon: "",
                         tooltip: "开启",
                         switch: true,
-                        onSwitch: t => (e.config({
+                        onSwitch: t => (art.plugins.artplayerPluginDanmuku.config({
                             antiOverlap: !t.switch
                         }),
                             t.tooltip = t.switch ? "关闭" : "开启",
@@ -1187,7 +1166,7 @@ export default {
                         icon: "",
                         tooltip: "开启",
                         switch: true,
-                        onSwitch: t => (e.config({
+                        onSwitch: t => (art.plugins.artplayerPluginDanmuku.config({
                             synchronousPlayback: !t.switch
                         }),
                             t.tooltip = t.switch ? "关闭" : "开启",
@@ -1238,8 +1217,9 @@ export default {
             art.on('artplayerPluginDanmuku:config', (option) => {
                 console.info('配置变化', option);
                 art.storage.name = 'danmu_setting';
-                delete option.danmuku;
-                art.storage.set("value", option);
+                var o = JSON.parse(JSON.stringify(option))
+                delete o.danmuku;
+                art.storage.set("value", o);
                 art.storage.name = 'artplayer_settings';
             });
 
