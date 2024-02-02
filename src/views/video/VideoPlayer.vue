@@ -579,6 +579,26 @@ export default {
                                     return !item.switch;
                                 },
                             },
+                            {
+                                html: '字幕字体',
+                                tooltip: '40px',
+                                range: [20, 5, 200, 5],
+                                onChange: function (item, $dom, event) {
+                                    art.subtitle.style({
+                                        fontSize: item.range + 'px',
+                                    });
+                                    return item.range + 'px';
+                                },
+                            },
+                            {
+                                html: "字幕偏移",
+                                tooltip: '0s',
+                                range: [0, -10, 10, 1],
+                                onChange: function (item, $dom, event) {
+                                    art.subtitleOffset = item.range;
+                                    return item.range + 's';
+                                }
+                            }
                         ],
                         onSelect: function (item, $dom, event) {
                             art.subtitle.url = item.url;
@@ -593,6 +613,9 @@ export default {
                     }
                     subtitle.selector.push(selector);
                     art.setting.update(subtitle);
+                    art.subtitle.style({
+                        fontSize: '40px',
+                    });
                     return true;
                 }
                 return false;
@@ -703,6 +726,30 @@ export default {
             else {
                 var danmuku = `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${localStorage.getItem(id.value + "_tv")}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`;
             }
+            var danmu_setting = window.localStorage.danmu_setting;
+            if (danmu_setting == undefined) {
+                danmu_setting = JSON.stringify({
+                    value: {
+                        speed: 8.5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
+                        opacity: 0.5, // 弹幕透明度，范围在[0 ~ 1]
+                        fontSize: '3%', // 字体大小，支持数字和百分比
+                        color: '#FFFFFF', // 默认字体颜色
+                        mode: 0, // 默认模式，0-滚动，1-静止
+                        margin: [10, '75%'], // 弹幕上下边距，支持数字和百分比
+                        antiOverlap: true, // 是否防重叠
+                        useWorker: true, // 是否使用 web worker
+                        synchronousPlayback: true, // 是否同步到播放速度
+                        theme: 'light', // 输入框自定义挂载时的主题色，默认为 dark，可以选填亮色 light
+                        heatmap: true, // 是否开启弹幕热度图, 默认为 false
+                        beforeEmit: (danmu) => !!danmu.text.trim(), // 发送弹幕前的自定义校验，返回 true 则可以发送
+
+                    }
+                })
+
+            }
+            danmu_setting = JSON.parse(danmu_setting).value
+
+            danmu_setting.danmuku = danmuku
             setting.value = {
                 url: "",
                 id: "",
@@ -731,17 +778,17 @@ export default {
                 lock: true,
                 pip: false,
                 autoSize: false,
-                autoMini: false,
+                autoMini: true, // 当播放器滚动到浏览器视口以外时，自动进入 迷你播放 模式
                 screenshot: false,
                 setting: true,
                 loop: true,
-                flip: true,
-                playbackRate: true,
+                flip: false,    // 是否显示视频翻转功能，目前只出现在 设置面板 和 右键菜单 里
+                playbackRate: false,
                 aspectRatio: true,
                 fastForward: true,
                 fullscreen: true,
                 fullscreenWeb: true,
-                subtitleOffset: true,
+                subtitleOffset: false,
                 miniProgressBar: false,
                 mutex: true,
                 backdrop: true,
@@ -772,6 +819,58 @@ export default {
                     //         a.click();
                     //     },
                     // }
+                    {
+                        name: 'skip',
+                        position: 'right',
+                        html: '记录片头片尾',
+                        selector: [
+                            {
+                                default: true,
+                                html: '记录片头',
+                            },
+                            {
+                                html: '记录片尾',
+                            },
+                        ],
+                        onSelect: function (item, $dom) {
+                            console.info(item, $dom);
+                            return '记录片头片尾';
+                        },
+                    },
+                    {
+                        name: '倍速',
+                        position: 'right',
+                        html: '倍速',
+                        selector: [
+                            {
+                                html: 0.5,
+                            },
+                            {
+                                html: 0.8,
+                            },
+                            {
+                                html: 1,
+                            }, {
+                                html: 1.2,
+                            }, {
+                                html: 1.5,
+                            }, {
+                                html: 1.8,
+                            }, {
+                                html: 2,
+                            }, {
+                                html: 2.5,
+                            }, {
+                                html: 2.8,
+                            }, {
+                                html: 3,
+                            },
+                        ],
+                        onSelect: function (item, $dom) {
+                            art.playbackRate = item.html;
+                            return '倍速';
+                        },
+                    }
                 ],
                 quality: [],
                 icons: {
@@ -781,29 +880,7 @@ export default {
                 },
                 plugins: [
                     //   artplayerPluginControl(),
-                    artplayerPluginDanmuku(
-                        {
-                            danmuku: danmuku,
-                            speed: 8.5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]
-                            opacity: 0.5, // 弹幕透明度，范围在[0 ~ 1]
-                            fontSize: '3%', // 字体大小，支持数字和百分比
-                            color: '#FFFFFF', // 默认字体颜色
-                            mode: 0, // 默认模式，0-滚动，1-静止
-                            margin: [10, '75%'], // 弹幕上下边距，支持数字和百分比
-                            antiOverlap: true, // 是否防重叠
-                            useWorker: true, // 是否使用 web worker
-                            synchronousPlayback: true, // 是否同步到播放速度
-                            filter: (danmu) => danmu.text.length < 50, // 弹幕过滤函数，返回 true 则可以发送
-                            lockTime: 5, // 输入框锁定时间，单位秒，范围在[1 ~ 60]
-                            maxLength: 100, // 输入框最大可输入的字数，范围在[0 ~ 500]
-                            minWidth: 200, // 输入框最小宽度，范围在[0 ~ 500]，填 0 则为无限制
-                            maxWidth: 600, // 输入框最大宽度，范围在[0 ~ Infinity]，填 0 则为 100% 宽度
-                            theme: 'light', // 输入框自定义挂载时的主题色，默认为 dark，可以选填亮色 light
-                            heatmap: true, // 是否开启弹幕热度图, 默认为 false
-                            beforeEmit: (danmu) => !!danmu.text.trim(), // 发送弹幕前的自定义校验，返回 true 则可以发送
-
-                        }
-                    )
+                    artplayerPluginDanmuku(danmu_setting)
                 ],
             }
         }
@@ -956,6 +1033,23 @@ export default {
 
         const artF = async (data) => {
             art = data;
+            art.storage.name = 'skip';
+            var d = {
+                html: '跳过片头片尾',
+                tooltip: art.storage.get('skip') == undefined ? "打开" : (art.storage.get('skip') ? "打开" : "关闭"),
+                switch: art.storage.get('skip') == undefined ? true : art.storage.get('skip'),
+                onSwitch: function (item, $dom, event) {
+                    console.log(item);
+                    art.storage.name = 'skip';
+                    art.storage.set('skip', !item.switch);
+                    art.storage.name = "artplayer_settings"
+                    const nextState = !item.switch;
+                    item.tooltip = nextState ? '打开' : '关闭';
+                    return nextState;
+                },
+            }
+            art.setting.add(d);
+            art.storage.name = "artplayer_settings"
             art.on('restart', () => {
                 url.value = encodeURI(art.url);
             });
@@ -963,7 +1057,10 @@ export default {
                 if (localStorage.playbackRate) {
                     art.playbackRate = localStorage.playbackRate;
                 }
+                var head_time = season.value.head_time - 8;
+                var tail_time = season.value.tail_time + 8;
 
+                // 获取在线进度
                 var params = new URLSearchParams(window.location.search);
                 var api = "";
                 if (params.get("gallery_type") == "tv") {
@@ -984,10 +1081,13 @@ export default {
                         'Authorization': proxy.$cookies.get("Authorization")
                     }
                 }).then(res => {
-                    console.log("请求成功");
                     var times = {};
                     var res_data = res.data.data;
                     if (res_data == undefined) {
+                        art.storage.name = 'skip';
+                        if (art.storage.get('skip') == undefined || art.storage.get('skip')) {
+                            art.currentTime = head_time;
+                        }
                         art.play();
                     }
                     else {
@@ -1007,10 +1107,92 @@ export default {
                         }
                         localStorage.artplayer_settings = JSON.stringify({ "times": times });
                         console.log("进度已保存");
+                        if (head_time != 0 && head_time > _time) {
+                            if (art.storage.get('skip') == undefined || art.storage.get('skip')) {
+                                _time = head_time;
+                            }
+
+                        }
                         art.currentTime = _time;
                         art.play();
                     }
 
+                })
+
+                // 设置自定义的弹幕设置方案
+                // art.setting.remove('danmuku');
+                art.setting.add({
+                    width: 260,
+                    name: "danmuku",
+                    html: "弹幕设置",
+                    tooltip: "更多",
+                    selector: [{
+                        width: '20%',
+                        html: "播放速度",
+                        icon: "",
+                        tooltip: "5",
+                        range: [5, 1, 10, 1],
+                        onChange: function (t, $dom, event) {
+                            // TODO 设置值的代码
+                            console.log(art);
+                            console.log(art);
+                            art.plugins.artplayerPluginDanmuku.config({
+                                speed: t.range
+                            })
+                            return t.range
+                        }
+                    }, {
+                        width: '20%',
+                        html: "字体大小",
+                        icon: "",
+                        tooltip: "6%",
+                        range: [6, 1, 10, 1],
+                        onChange: function (t, $dom, event) {
+                            // TODO 设置值的代码
+                            return t.range + "%"
+                        }
+                    }, {
+                        width: '20%',
+                        html: "不透明度",
+                        icon: "",
+                        tooltip: "100%",
+                        range: [100, 0, 100, 20],
+                        onChange: function (t, $dom, event) {
+                            // TODO 设置值的代码
+                            return t.range + "%"
+                        }
+                    }, {
+                        width: '20%',
+                        html: "显示范围",
+                        icon: "",
+                        tooltip: "80%",
+                        range: [80, 0, 100, 10],
+
+                        onChange: function (t, $dom, event) {
+                            // TODO 设置值的代码
+                            return t.range + "%"
+                        }
+                    }, {
+                        html: "弹幕防重叠",
+                        icon: "",
+                        tooltip: "开启",
+                        switch: true,
+                        onSwitch: t => (e.config({
+                            antiOverlap: !t.switch
+                        }),
+                            t.tooltip = t.switch ? "关闭" : "开启",
+                            !t.switch)
+                    }, {
+                        html: "同步视频速度",
+                        icon: "",
+                        tooltip: "开启",
+                        switch: true,
+                        onSwitch: t => (e.config({
+                            synchronousPlayback: !t.switch
+                        }),
+                            t.tooltip = t.switch ? "关闭" : "开启",
+                            !t.switch)
+                    }]
                 })
 
                 // art.currentTime = JSON.parse(localStorage.artplayer_settings).times[decodeURI(art.url).match(/\/d\/.*$/)[0]];
@@ -1051,6 +1233,14 @@ export default {
 
             art.on('video:stalled', () => {
                 console.log("用户代理（user agent）正在尝试获取媒体数据，但数据意外未出现");
+            });
+
+            art.on('artplayerPluginDanmuku:config', (option) => {
+                console.info('配置变化', option);
+                art.storage.name = 'danmu_setting';
+                delete option.danmuku;
+                art.storage.set("value", option);
+                art.storage.name = 'artplayer_settings';
             });
 
 
@@ -1111,14 +1301,15 @@ export default {
             left,
             season,
             proxy,
+            art
         }
     },
     methods: {
-        getInstance(art) {
-            this.artF(art);
-            this.art = art;
+        getInstance(_art) {
+            this.artF(_art);
+            this.art = _art;
             this.art.url = this.url
-            //console.info(this.art)
+            console.info(this.art)
         },
         PlayEpisod(speed) {
             this.$router.push({
