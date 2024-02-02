@@ -346,6 +346,7 @@ export default {
                 chunkSubtitles(season.value.episodes[speed.value].url);
             }
             let selectList = {
+                name: "选集",
                 html: '选集',
                 width: 300,
                 tooltip: season.value.name,
@@ -374,7 +375,7 @@ export default {
                             chunkSubtitles(item.url.replaceAll(alist_host.value, ""));
                         });
                     }
-                    return item.html;
+                    return `第${speed.value + 1}集`;
                 },
             };
             for (let i = 0; i < season.value.episodes.length; i++) {
@@ -678,10 +679,27 @@ export default {
                     color: 'green',
                 },
                 click: function () {
+                    console.log("下一集");
                     if (urlList.value != null) {
                         speed.value++;
+                        if (gallery_type.value == "tv") {
+                            localStorage.setItem(`${season_id.value}_${gallery_type.value}`, speed.value);
+                        }
+                        else {
+                            localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
+                        }
                         if (speed.value <= urlList.value.length) {
-                            art.switchUrl(urlList.value[speed.value - 1].url, urlList.value[speed.value - 1].html);
+                            document.title = `第${speed.value + 1}集`
+                            art.switchUrl(urlList.value[speed.value].url, urlList.value[speed.value].html);
+                            var _t = urlList.value.find(i => i.speed === speed.value);
+                            var _t2 = urlList.value.find(i => i.default == true);
+                            _t.default = true;
+                            _t2.default = false;
+                            art.setting.update({
+                                name: '选集',
+                                tooltip: `第${speed.value + 1}集`,
+                                selector: urlList
+                            });
                         }
                     }
                 },
@@ -1139,7 +1157,7 @@ export default {
             });
             art.on('video:ended', () => {
                 console.log("视频播放完毕");
-                speed.value += 1;
+                speed.value++;
                 if (gallery_type.value == "tv") {
                     localStorage.setItem(`${season_id.value}_${gallery_type.value}`, speed.value);
                 }
@@ -1151,16 +1169,17 @@ export default {
                 })
                 art.plugins.artplayerPluginDanmuku.load();
                 document.title = gallery_type.value == "tv" ? `第${speed.value + 1}集` : data.value.title
-                if (is_ali_open.value) {
-                    urlBase.value = encodeURI(alist_host.value + season.value.episodes[speed.value].url)
-                    OpenVideo(season.value.episodes[speed.value].url);
-                } else {
-                    urlBase.value = encodeURI(season.value.episodes[speed.value].url);
-                    art.switchUrl(is_ali_open.value ? episode.url : alist_host.value + season.value.episodes[speed.value].url);
-                    art.option.id = season.value.episodes[speed.value].url.replaceAll(alist_host.value, "");
-                    art.on('ready', () => {
-                        art.play();
-                        chunkSubtitles(season.value.episodes[speed.value].url.replaceAll(alist_host.value, ""));
+
+                if (speed.value <= urlList.value.length) {
+                    art.switchUrl(urlList.value[speed.value - 1].url, urlList.value[speed.value - 1].html);
+                    var _t = urlList.value.find(i => i.speed === speed.value);
+                    var _t2 = urlList.value.find(i => i.default == true);
+                    _t.default = true;
+                    _t2.default = false;
+                    art.setting.update({
+                        name: '选集',
+                        tooltip: `第${speed.value + 1}集`,
+                        selector: urlList
                     });
                 }
             });
@@ -1192,6 +1211,7 @@ export default {
 
         onMounted(() => {
             initArt();
+            initArtTv();
             fetchData();
             // get_progress();
             setInterval(() => {
