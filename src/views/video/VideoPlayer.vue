@@ -353,6 +353,7 @@ export default {
                 tooltip: season.value.name,
                 selector: [],
                 onSelect: function (item, $dom, event) {
+                    speed.value = item.speed
                     if (gallery_type.value == "tv") {
                         localStorage.setItem(`${season_id.value}_${gallery_type.value}`, item.speed);
                     }
@@ -690,6 +691,10 @@ export default {
                             localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
                         }
                         if (speed.value <= urlList.value.length) {
+                            art.plugins.artplayerPluginDanmuku.config({
+                                danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${speed.value}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
+                            })
+                            art.plugins.artplayerPluginDanmuku.load();
                             document.title = `第${speed.value + 1}集`
                             art.switchUrl(urlList.value[speed.value].url, urlList.value[speed.value].html);
                             var _t = urlList.value.find(i => i.speed === speed.value);
@@ -752,6 +757,22 @@ export default {
                     flv: function (video, url) {
                         const flvPlayer = flvjs.createPlayer({
                             type: 'flv',
+                            url: url
+                        })
+                        flvPlayer.attachMediaElement(video)
+                        flvPlayer.load()
+                    },
+                    mkv: function (video, url) {
+                        const flvPlayer = flvjs.createPlayer({
+                            type: 'mkv',
+                            url: url
+                        })
+                        flvPlayer.attachMediaElement(video)
+                        flvPlayer.load()
+                    },
+                    mp4: function (video, url) {
+                        const flvPlayer = flvjs.createPlayer({
+                            type: 'mkv',
                             url: url
                         })
                         flvPlayer.attachMediaElement(video)
@@ -1002,7 +1023,9 @@ export default {
 
         function load_art_settings() {
             // 设置自定义的弹幕设置方案
-            art.setting.remove('danmuku');
+            if (art.setting.option.find((r) => r.name == "danmuku") != undefined) {
+                art.setting.remove('danmuku');
+            }
             art.setting.add({
                 width: 260,
                 name: "danmuku",
@@ -1083,13 +1106,40 @@ export default {
                         !t.switch)
                 }]
             })
+
+            art.storage.name = 'skip';
+            if (art.setting.option.find((r) => r.name == "跳过片头片尾") != undefined) {
+                art.setting.remove('跳过片头片尾');
+            }
+
+            var d = {
+                name: "跳过片头片尾",
+                html: '跳过片头片尾',
+                tooltip: art.storage.get('skip') == undefined ? "打开" : (art.storage.get('skip') ? "打开" : "关闭"),
+                switch: art.storage.get('skip') == undefined ? true : art.storage.get('skip'),
+                onSwitch: function (item, $dom, event) {
+                    console.log(item);
+                    art.storage.name = 'skip';
+                    art.storage.set('skip', !item.switch);
+                    art.storage.name = "artplayer_settings"
+                    const nextState = !item.switch;
+                    item.tooltip = nextState ? '打开' : '关闭';
+                    return nextState;
+                },
+            }
+            art.setting.update(d);
+            art.storage.name = "artplayer_settings"
         }
         function ready() {
+            var params = new URLSearchParams(window.location.search);
             if (localStorage.playbackRate) {
                 art.playbackRate = localStorage.playbackRate;
             }
-            var head_time = season.value.head_time - 8;
-            var tail_time = season.value.tail_time + 8;
+            head_time = 0;
+            if (params.get("gallery_type") == "tv") {
+                var head_time = season.value.head_time - 8;
+                var tail_time = season.value.tail_time + 8;
+            }
             var duration = art.duration;
             if (duration != 0) {
                 if (head_time >= (duration / 3)) {
@@ -1099,7 +1149,6 @@ export default {
             }
 
             // 获取在线进度
-            var params = new URLSearchParams(window.location.search);
             var api = "";
             if (params.get("gallery_type") == "tv") {
                 api = `${proxy.COMMON.apiUrl}/v1/api/progress/get?tv_id=${params.get("id")}&season_id=${params.get("season_id")}`;
@@ -1123,7 +1172,7 @@ export default {
                 var res_data = res.data.data;
                 if (res_data == undefined) {
                     art.storage.name = 'skip';
-                    if ((art.storage.get('skip') == undefined || art.storage.get('skip'))&& head_time > 0) {
+                    if ((art.storage.get('skip') == undefined || art.storage.get('skip')) && head_time > 0) {
                         proxy.COMMON.ShowMsg("跳过开头")
                         art.currentTime = head_time;
                     }
@@ -1154,27 +1203,13 @@ export default {
                     }
                     art.currentTime = _time;
                     art.play();
+
                 }
+                art.storage.name = 'artplayer_settings';
                 load_art_settings()
 
             })
-            art.storage.name = 'skip';
-            var d = {
-                html: '跳过片头片尾',
-                tooltip: art.storage.get('skip') == undefined ? "打开" : (art.storage.get('skip') ? "打开" : "关闭"),
-                switch: art.storage.get('skip') == undefined ? true : art.storage.get('skip'),
-                onSwitch: function (item, $dom, event) {
-                    console.log(item);
-                    art.storage.name = 'skip';
-                    art.storage.set('skip', !item.switch);
-                    art.storage.name = "artplayer_settings"
-                    const nextState = !item.switch;
-                    item.tooltip = nextState ? '打开' : '关闭';
-                    return nextState;
-                },
-            }
-            art.setting.add(d);
-            art.storage.name = "artplayer_settings"
+
 
 
 

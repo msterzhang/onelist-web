@@ -202,6 +202,7 @@ export default {
         function fetchData() {
             let api = `${proxy.COMMON.apiUrl}/v1/api/thetv/sort?gallery_uid=${gallery_uid.value}&mode=${mode.value}&order=${order.value}&page=${page.value}&size=${size.value}`;
             if (gallery_type.value == "movie") {
+                if(mode.value == "name"){mode.value = "title";}
                 api = `${proxy.COMMON.apiUrl}/v1/api/themovie/sort?gallery_uid=${gallery_uid.value}&mode=${mode.value}&order=${order.value}&page=${page.value}&size=${size.value}`;
             }
             proxy.axios.post(api, {}, {
