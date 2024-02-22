@@ -697,6 +697,7 @@ export default {
                             art.plugins.artplayerPluginDanmuku.load();
                             document.title = `第${speed.value + 1}集`
                             art.switchUrl(urlList.value[speed.value].url, urlList.value[speed.value].html);
+                            art.option.id = urlList.value[speed.value].url.replaceAll(alist_host.value, "");
                             var _t = urlList.value.find(i => i.speed === speed.value);
                             var _t2 = urlList.value.find(i => i.default == true);
                             _t.default = true;
