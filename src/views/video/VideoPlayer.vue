@@ -669,6 +669,56 @@ export default {
             });
         }
 
+        function debounce(func, delay) {
+            let timeoutId;
+
+            return function () {
+                const context = this;
+                const args = arguments;
+
+                clearTimeout(timeoutId);
+
+                timeoutId = setTimeout(function () {
+                    func.apply(context, args);
+                }, delay);
+            };
+        }
+
+        function next_set() {
+            // setTimeout(_next_set, 1000*3)
+            _next_set()
+        }
+
+        function _next_set() {
+            if (urlList.value != null) {
+                speed.value++;
+                if (gallery_type.value == "tv") {
+                    localStorage.setItem(`${season_id.value}_${gallery_type.value}`, speed.value);
+                }
+                else {
+                    localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
+                }
+                if (speed.value <= urlList.value.length) {
+                    art.plugins.artplayerPluginDanmuku.config({
+                        danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${speed.value}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
+                    })
+                    art.plugins.artplayerPluginDanmuku.load();
+                    document.title = `第${speed.value + 1}集`
+                    art.switchUrl(urlList.value[speed.value].url, urlList.value[speed.value].html);
+                    art.option.id = urlList.value[speed.value].url.replaceAll(alist_host.value, "");
+                    var _t = urlList.value.find(i => i.speed === speed.value);
+                    var _t2 = urlList.value.find(i => i.default == true);
+                    _t.default = true;
+                    _t2.default = false;
+                    art.setting.update({
+                        name: '选集',
+                        tooltip: `第${speed.value + 1}集`,
+                        selector: urlList
+                    });
+                }
+            }
+        }
+
 
         // 下一集按钮，还不能和选集面板联动，暂时不用
         function initArtTv() {
@@ -682,33 +732,7 @@ export default {
                 },
                 click: function () {
                     console.log("下一集");
-                    if (urlList.value != null) {
-                        speed.value++;
-                        if (gallery_type.value == "tv") {
-                            localStorage.setItem(`${season_id.value}_${gallery_type.value}`, speed.value);
-                        }
-                        else {
-                            localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
-                        }
-                        if (speed.value <= urlList.value.length) {
-                            art.plugins.artplayerPluginDanmuku.config({
-                                danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${speed.value}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
-                            })
-                            art.plugins.artplayerPluginDanmuku.load();
-                            document.title = `第${speed.value + 1}集`
-                            art.switchUrl(urlList.value[speed.value].url, urlList.value[speed.value].html);
-                            art.option.id = urlList.value[speed.value].url.replaceAll(alist_host.value, "");
-                            var _t = urlList.value.find(i => i.speed === speed.value);
-                            var _t2 = urlList.value.find(i => i.default == true);
-                            _t.default = true;
-                            _t2.default = false;
-                            art.setting.update({
-                                name: '选集',
-                                tooltip: `第${speed.value + 1}集`,
-                                selector: urlList
-                            });
-                        }
-                    }
+                    next_set()
                 },
             }
             setting.value.controls.push(next);
@@ -850,7 +874,7 @@ export default {
                                 var api = `${proxy.COMMON.apiUrl}/v1/api/barrage/time_update?type=head_time&season_id=${season_id.value}&head_time=${art.currentTime}`;
                             }
                             else {
-                                var api = `${proxy.COMMON.apiUrl}/v1/api/barrage/time_update?type=tail_time&season_id=${season_id.value}&tail_time=${art.currentTime}`;
+                                var api = `${proxy.COMMON.apiUrl}/v1/api/barrage/time_update?type=tail_time&season_id=${season_id.value}&tail_time=${art.duration - art.currentTime}`;
                             }
                             proxy.axios.get(api, {
                                 headers: {
@@ -1271,33 +1295,24 @@ export default {
             art.on('video:ratechange', () => {
                 localStorage.playbackRate = art.playbackRate;
             });
+            art.on("video:timeupdate", () => {
+                console.log(art.currentTime);
+                var duration = art.duration;
+                var tail_time = season.value.tail_time;
+                if (tail_time > duration / 3) {
+                    return
+                }
+
+                if ((art.currentTime + tail_time) > duration) {
+                    art.currentTime = 1
+                    next_set()
+                }
+
+
+            })
             art.on('video:ended', () => {
                 console.log("视频播放完毕");
-                speed.value++;
-                if (gallery_type.value == "tv") {
-                    localStorage.setItem(`${season_id.value}_${gallery_type.value}`, speed.value);
-                }
-                else {
-                    localStorage.setItem(`${id.value}_${gallery_type.value}`, speed.value);
-                }
-                art.plugins.artplayerPluginDanmuku.config({
-                    danmuku: `${proxy.COMMON.apiUrl}/v1/api/barrage/get?id=${id.value}&tv=${speed.value}&season_id=${season_id.value}&gallery_type=${gallery_type.value}`
-                })
-                art.plugins.artplayerPluginDanmuku.load();
-                document.title = gallery_type.value == "tv" ? `第${speed.value + 1}集` : data.value.title
-
-                if (speed.value <= urlList.value.length) {
-                    art.switchUrl(urlList.value[speed.value - 1].url, urlList.value[speed.value - 1].html);
-                    var _t = urlList.value.find(i => i.speed === speed.value);
-                    var _t2 = urlList.value.find(i => i.default == true);
-                    _t.default = true;
-                    _t2.default = false;
-                    art.setting.update({
-                        name: '选集',
-                        tooltip: `第${speed.value + 1}集`,
-                        selector: urlList
-                    });
-                }
+                next_set()
             });
 
             art.on('artplayerPluginDanmuku:config', (option) => {
