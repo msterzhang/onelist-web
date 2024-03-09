@@ -823,7 +823,7 @@ export default {
                 aspectRatio: true,
                 fastForward: true,
                 fullscreen: true,
-                fullscreenWeb: true,
+                fullscreenWeb: false,
                 subtitleOffset: false,
                 miniProgressBar: false,
                 mutex: true,
@@ -858,7 +858,7 @@ export default {
                     {
                         name: 'skip',
                         position: 'right',
-                        html: '记录片头片尾',
+                        html: '头尾',
                         selector: [
                             {
                                 default: true,
@@ -869,7 +869,7 @@ export default {
                             },
                         ],
                         onSelect: function (item, $dom) {
-                            console.info(item, $dom);
+                            // console.info(item, $dom);
                             if (item.html == '记录片头') {
                                 var api = `${proxy.COMMON.apiUrl}/v1/api/barrage/time_update?type=head_time&season_id=${season_id.value}&head_time=${art.currentTime}`;
                             }
@@ -1156,6 +1156,9 @@ export default {
             art.storage.name = "artplayer_settings"
         }
         function ready() {
+            console.log(1);
+            art.controls.remove('volume');
+
             var params = new URLSearchParams(window.location.search);
             if (localStorage.playbackRate) {
                 art.playbackRate = localStorage.playbackRate;
@@ -1296,7 +1299,7 @@ export default {
                 localStorage.playbackRate = art.playbackRate;
             });
             art.on("video:timeupdate", () => {
-                console.log(art.currentTime);
+                // console.log(art.currentTime);
                 var duration = art.duration;
                 var tail_time = season.value.tail_time;
                 if (tail_time > duration / 3) {
