@@ -25,8 +25,8 @@
                     <div class="data-content">
                         <div class="star">
                             评分：{{ isNaN(Math.floor(data.vote_average * 100) / 100) ?
-                                "" :
-                                Math.floor(data.vote_average * 100) / 100
+        "" :
+        Math.floor(data.vote_average * 100) / 100
                             }}
                         </div>
                         <div class="yaer">
@@ -97,18 +97,19 @@
                                 <div class="view-item" v-show="item.id != data.id" v-for="(item, index) in like"
                                     :key="index">
                                     <router-link :to="{
-                                        path: '/video', query: {
-                                            id: item.id,
-                                            gallery_type: gallery_type
-                                        }
-                                    }">
+        path: '/video', query: {
+            id: item.id,
+            gallery_type: gallery_type
+        }
+    }">
                                         <div class="view-item-header">
                                             <div class="view-item-tag-list">
-                                                <div class="view-item-tag rating">{{ isNaN(Math.floor(item.vote_average *
-                                                    100) / 100) ?
-                                                    "" :
-                                                    Math.floor(item.vote_average * 100) / 100
-                                                }}
+                                                <div class="view-item-tag rating">{{ isNaN(Math.floor(item.vote_average
+        *
+        100) / 100) ?
+        "" :
+        Math.floor(item.vote_average * 100) / 100
+                                                    }}
                                                 </div>
                                                 <div v-if="item.played" class="view-item-tag count">
                                                     <i class='bx bx-check'></i>
@@ -142,7 +143,8 @@
                             <div class="episode-card-item" v-for="(item, index) in season.episodes" :key="index">
                                 <div class="episode-img">
                                     <img v-if="item.still_path.length > 0" loading="lazy"
-                                        :src='COMMON.imgUrl + "/t/p/w710_and_h400_multi_faces" + item.still_path' alt="">
+                                        :src='COMMON.imgUrl + "/t/p/w710_and_h400_multi_faces" + item.still_path'
+                                        alt="">
                                     <img v-else loading="lazy" src="/images/not_img.png" alt="">
                                 </div>
                                 <div class="episode-content">
@@ -164,13 +166,14 @@
                     </div>
                     <n-scrollbar style="max-height: 80vh">
                         <div class="show-list">
-                            <div class="show-item" v-show="item.id != data.id" v-for="(item, index) in like" :key="index">
+                            <div class="show-item" v-show="item.id != data.id" v-for="(item, index) in like"
+                                :key="index">
                                 <router-link :to="{
-                                    path: '/video', query: {
-                                        id: item.id,
-                                        gallery_type: gallery_type
-                                    }
-                                }">
+        path: '/video', query: {
+            id: item.id,
+            gallery_type: gallery_type
+        }
+    }">
                                     <img loading="lazy" class="carousel-img"
                                         :src='COMMON.imgUrl + "/t/p/w220_and_h330_face/" + item.poster_path'>
                                 </router-link>
@@ -183,8 +186,8 @@
                                     </div>
                                     <div class="star">
                                         评分：{{ isNaN(Math.floor(item.vote_average * 100) / 100) ?
-                                            "" :
-                                            Math.floor(item.vote_average * 100) / 100
+        "" :
+        Math.floor(item.vote_average * 100) / 100
                                         }}
                                     </div>
                                     <div class="yaer">
@@ -837,28 +840,11 @@ export default {
                 moreVideoAttr: {
                     crossOrigin: 'anonymous',
                 },
-                settings: [],
-                controls: [
-                    // {
-                    //     position: 'right',
-                    //     index: 15,
-                    //     html: '<img width="18" heigth="18" src="./images/download.svg">',
-                    //     tooltip: '下载视频',
-                    //     style: {
-                    //         color: 'red',
-                    //     },
-                    //     click: function () {
-                    //         const a = document.createElement('a');
-                    //         a.setAttribute('href', url.value);
-                    //         a.setAttribute('target', "_blank");
-                    //         a.setAttribute('download', "001.mp4");
-                    //         a.click();
-                    //     },
-                    // }
+                settings: [
                     {
                         name: 'skip',
                         position: 'right',
-                        html: '头尾',
+                        html: '记录片头片尾',
                         selector: [
                             {
                                 default: true,
@@ -893,6 +879,25 @@ export default {
                             return '记录片头片尾';
                         },
                     },
+                ],
+                controls: [
+                    // {
+                    //     position: 'right',
+                    //     index: 15,
+                    //     html: '<img width="18" heigth="18" src="./images/download.svg">',
+                    //     tooltip: '下载视频',
+                    //     style: {
+                    //         color: 'red',
+                    //     },
+                    //     click: function () {
+                    //         const a = document.createElement('a');
+                    //         a.setAttribute('href', url.value);
+                    //         a.setAttribute('target', "_blank");
+                    //         a.setAttribute('download', "001.mp4");
+                    //         a.click();
+                    //     },
+                    // }
+
                     {
                         name: '倍速',
                         position: 'right',
@@ -1156,8 +1161,7 @@ export default {
             art.storage.name = "artplayer_settings"
         }
         function ready() {
-            console.log(1);
-            art.controls.remove('volume');
+            // art.controls.remove('volume');
 
             var params = new URLSearchParams(window.location.search);
             if (localStorage.playbackRate) {
@@ -1422,7 +1426,7 @@ export default {
     }
 }
 
-</script >
+</script>
 
 <style scoped>
 h1 {
